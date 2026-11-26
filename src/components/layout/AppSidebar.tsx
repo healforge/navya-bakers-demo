@@ -23,7 +23,7 @@ export function AppSidebar({ role, subtitle }: { role: Role; subtitle: string })
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="px-3 py-4 group-data-[collapsible=icon]:px-2">
-        <Logo wordmarkClassName="group-data-[collapsible=icon]:hidden" />
+        <Logo className="max-w-full overflow-hidden" />
       </SidebarHeader>
       <SidebarContent>
         {[...groups.entries()].map(([label, items]) => (
