@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Navya Bakers">
+  <rect width="512" height="512" rx="112" fill="#6B3E26"/>
+  <circle cx="256" cy="268" r="170" fill="#8A5336"/>
+  <!-- wheat ear -->
+  <g fill="#E8A33D">
+    <ellipse cx="256" cy="112" rx="22" ry="42"/>
+    <g transform="rotate(-38 222 168)"><ellipse cx="222" cy="168" rx="20" ry="40"/></g>
+    <g transform="rotate(38 290 168)"><ellipse cx="290" cy="168" rx="20" ry="40"/></g>
+    <g transform="rotate(-38 216 236)"><ellipse cx="216" cy="236" rx="20" ry="40"/></g>
+    <g transform="rotate(38 296 236)"><ellipse cx="296" cy="236" rx="20" ry="40"/></g>
+    <g transform="rotate(-38 210 304)"><ellipse cx="210" cy="304" rx="20" ry="40"/></g>
+    <g transform="rotate(38 302 304)"><ellipse cx="302" cy="304" rx="20" ry="40"/></g>
+  </g>
+  <path d="M256 150V410" stroke="#FBF6EE" stroke-width="14" stroke-linecap="round"/>
+  <path d="M176 418c26-26 54-34 80-34s54 8 80 34" fill="none" stroke="#FBF6EE" stroke-width="14" stroke-linecap="round"/>
+</svg>

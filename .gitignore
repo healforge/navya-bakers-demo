@@ -1,0 +1,22 @@
+# dependencies & build output
+node_modules
+dist
+dist-ssr
+dev-dist
+*.tsbuildinfo
+
+# env files (never commit secrets)
+.env
+.env.*
+!.env.example
+
+# logs / editor / OS
+logs
+*.log
+pnpm-debug.log*
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.local
+coverage
