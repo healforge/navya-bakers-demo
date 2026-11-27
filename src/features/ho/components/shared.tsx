@@ -1,28 +1,31 @@
 import type { ReactNode } from 'react'
+import { useLanguage } from '@/i18n/useLanguage'
+import type { Translate } from '@/i18n/translations'
 import { toast } from 'sonner'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 
 /** Run an action; toast the error message on failure, optional success toast. Returns true on success. */
-export async function run(fn: () => unknown | Promise<unknown>, success?: string): Promise<boolean> {
+export async function run(t: Translate, fn: () => unknown | Promise<unknown>, success?: string): Promise<boolean> {
   try {
     await fn()
-    if (success) toast.success(success)
+    if (success) toast.success(t(success))
     return true
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Something went wrong')
+    toast.error(t(e instanceof Error ? e.message : 'Something went wrong'))
     return false
   }
 }
 
 /** Label + control + error text (there is no shadcn `form` component). */
 export function FormRow({ label, error, hint, children, className }: { label: string; error?: string; hint?: string; children: ReactNode; className?: string }) {
+  const { t } = useLanguage()
   return (
     <div className={cn('space-y-1.5', className)}>
       <Label>{label}</Label>
       {children}
-      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
-      {error && <p className="text-xs text-destructive" role="alert">{error}</p>}
+      {hint && !error && <p className="text-xs text-muted-foreground">{t(hint)}</p>}
+      {error && <p className="text-xs text-destructive" role="alert">{t(error)}</p>}
     </div>
   )
 }

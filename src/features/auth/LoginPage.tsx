@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router'
 import { Lock } from 'lucide-react'
@@ -5,6 +6,7 @@ import { toast } from 'sonner'
 import { ROLE_HOME, ROLE_LABEL, useCurrentUser } from '@/auth/session'
 import { signInAsDemo, signInWithPassword } from '@/auth/signIn'
 import { Logo } from '@/components/layout/Logo'
+import { LanguageSelect } from '@/components/layout/LanguageSelect'
 import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -21,6 +23,7 @@ const GROUPS: { role: Role; title: string }[] = [
 ]
 
 export default function LoginPage() {
+  const { t } = useLanguage()
   const user = useCurrentUser()
   const users = useDb((db) => db.users)
   const branches = useDb((db) => db.branches)
@@ -34,7 +37,7 @@ export default function LoginPage() {
   const pick = (u: User) => {
     if (u.passwordHash !== null) {
       setUsername(u.username)
-      toast.info(`${u.name} has a password — enter it below`)
+      toast.info(t('{name} has a password — enter it below', { name: u.name }))
       return
     }
     signInAsDemo(u.id)
@@ -48,7 +51,7 @@ export default function LoginPage() {
       const u = await signInWithPassword(username, password)
       navigate(ROLE_HOME[u.role], { replace: true })
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Sign-in failed')
+      toast.error(t(err instanceof Error ? err.message : "Sign-in failed"))
     } finally {
       setBusy(false)
     }
@@ -59,11 +62,14 @@ export default function LoginPage() {
       <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-8 md:py-14">
         <div className="flex items-center justify-between">
           <Logo size={40} />
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <LanguageSelect />
+            <ThemeToggle />
+          </div>
         </div>
         <div>
-          <h1 className="font-heading text-3xl font-semibold tracking-tight">Welcome back</h1>
-          <p className="mt-1 text-muted-foreground">Pick a demo user to explore, or sign in with a username.</p>
+          <h1 className="font-heading text-3xl font-semibold tracking-tight">{t('Welcome back')}</h1>
+          <p className="mt-1 text-muted-foreground">{t('Pick a demo user to explore, or sign in with a username.')}</p>
         </div>
 
         {GROUPS.map((g) => {
@@ -71,7 +77,7 @@ export default function LoginPage() {
           if (!list.length) return null
           return (
             <section key={g.role} className="space-y-3">
-              <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{g.title}</h2>
+              <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{t(g.title)}</h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {list.map((u) => (
                   <button key={u.id} type="button" onClick={() => pick(u)} className="text-left">
@@ -81,7 +87,7 @@ export default function LoginPage() {
                         <div className="min-w-0 flex-1">
                           <div className="truncate font-medium">{u.name}</div>
                           <div className="truncate text-xs text-muted-foreground">
-                            {u.branchId ? branches.find((b) => b.id === u.branchId)?.name : ROLE_LABEL[u.role]} · @{u.username}
+                            {u.branchId ? branches.find((b) => b.id === u.branchId)?.name : t(ROLE_LABEL[u.role])} · @{u.username}
                           </div>
                         </div>
                         {u.passwordHash !== null && <Lock className="size-4 text-muted-foreground" />}
@@ -98,18 +104,18 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={(e) => void submit(e)} className="space-y-3">
               <div className="space-y-1.5">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">{t('Username')}</Label>
                 <Input id="username" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('Password')}</Label>
                 <Input id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
               </div>
-              <Button type="submit" disabled={busy || !username} className="w-full">Sign in</Button>
+              <Button type="submit" disabled={busy || !username} className="w-full">{t('Sign in')}</Button>
             </form>
           </CardContent>
         </Card>
-        <p className="text-xs text-muted-foreground">Demo mode — not real security. Demo accounts accept any password.</p>
+        <p className="text-xs text-muted-foreground">{t('Demo mode — not real security. Demo accounts accept any password.')}</p>
       </div>
     </div>
   )

@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useMemo, useState } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 import { BranchSelect, ALL_BRANCHES } from '@/components/common/BranchSelect'
@@ -18,28 +19,29 @@ const SEVERITIES: AlertSeverity[] = ['critical', 'warning', 'info']
 const ALL = 'all'
 
 export default function CxoAlertsPage() {
+  const { t } = useLanguage()
   const { db } = useCxoScope()
   const [type, setType] = useState<string>(ALL)
   const [branch, setBranch] = useState<string>(ALL_BRANCHES)
-  const alerts = useMemo(() => computeAlerts(db), [db])
+  const alerts = useMemo(() => computeAlerts(db, undefined, t), [db, t])
   const filtered = useMemo(() => alerts.filter((a) => (type === ALL || a.type === type) && (branch === ALL_BRANCHES || a.branchId === branch)), [alerts, type, branch])
   const branchName = (id?: string) => db.branches.find((b) => b.id === id)?.name
 
   return (
     <>
       <PageHeader
-        title="Alerts"
-        description={`${alerts.length} open exception${alerts.length === 1 ? '' : 's'} across the business.`}
+        title={t('Alerts')}
+        description={t('{count} open exception{plural} across the business.', { count: alerts.length, plural: alerts.length === 1 ? '' : 's' })}
         actions={<>
           <Select value={type} onValueChange={setType}>
-            <SelectTrigger className="w-44"><SelectValue placeholder="Type" /></SelectTrigger>
-            <SelectContent><SelectItem value={ALL}>All types</SelectItem>{TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+            <SelectTrigger className="w-44"><SelectValue placeholder={t('Type')} /></SelectTrigger>
+            <SelectContent><SelectItem value={ALL}>{t('All types')}</SelectItem>{TYPES.map((type) => <SelectItem key={type.value} value={type.value}>{t(type.label)}</SelectItem>)}</SelectContent>
           </Select>
           <BranchSelect value={branch} onChange={setBranch} allowAll className="w-44" />
         </>}
       />
       {filtered.length === 0 ? (
-        <EmptyState icon={CheckCircle2} title="No alerts" description="Nothing matches these filters. All clear." />
+        <EmptyState icon={CheckCircle2} title={t('No alerts')} description={t('Nothing matches these filters. All clear.')} />
       ) : (
         <div className="space-y-6">
           {SEVERITIES.map((sev) => {

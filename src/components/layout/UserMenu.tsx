@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Download, LogOut, RotateCcw } from 'lucide-react'
@@ -15,6 +16,7 @@ import { dbActions } from '@/store/db'
 const initials = (name: string) => name.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase()
 
 export function UserMenu() {
+  const { t } = useLanguage()
   const user = useCurrentUser()
   const navigate = useNavigate()
   const { canInstall, install } = useInstallPrompt()
@@ -25,7 +27,7 @@ export function UserMenu() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="rounded-full" aria-label="User menu">
+          <Button variant="ghost" size="icon" className="rounded-full" aria-label={t('User menu')}>
             <Avatar className="size-8">
               <AvatarFallback className="bg-primary text-xs text-primary-foreground">{initials(user.name)}</AvatarFallback>
             </Avatar>
@@ -34,16 +36,16 @@ export function UserMenu() {
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>
             <div className="font-medium">{user.name}</div>
-            <div className="text-xs font-normal text-muted-foreground">{ROLE_LABEL[user.role]} · @{user.username}</div>
+            <div className="text-xs font-normal text-muted-foreground">{t(ROLE_LABEL[user.role])} · @{user.username}</div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           {canInstall && (
             <DropdownMenuItem onSelect={() => void install()}>
-              <Download /> Install app
+              <Download /> {t('Install app')}
             </DropdownMenuItem>
           )}
           <DropdownMenuItem onSelect={() => setConfirmReset(true)}>
-            <RotateCcw /> Reset demo data
+            <RotateCcw /> {t('Reset demo data')}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -52,20 +54,20 @@ export function UserMenu() {
               navigate('/login', { replace: true })
             }}
           >
-            <LogOut /> Sign out
+            <LogOut /> {t('Sign out')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <ConfirmDialog
         open={confirmReset}
         onOpenChange={setConfirmReset}
-        title="Reset demo data?"
-        description="This regenerates all demo data (bills, stock, indents, history) anchored at today and discards any changes you made."
-        confirmLabel="Reset"
+        title={t('Reset demo data?')}
+        description={t('This regenerates all demo data (bills, stock, indents, history) anchored at today and discards any changes you made.')}
+        confirmLabel={t('Reset')}
         destructive
         onConfirm={() => {
           dbActions.resetDemoData()
-          toast.success('Demo data reset')
+          toast.success(t('Demo data reset'))
         }}
       />
     </>

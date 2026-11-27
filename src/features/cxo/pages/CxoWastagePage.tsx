@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useMemo } from 'react'
 import { Coins, Package, Percent, Trash2 } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts'
@@ -15,6 +16,7 @@ import { trendRange, useBranchColors, useCxoScope } from '../filters'
 const rcfg = { value: { label: 'Value lost (MRP)', color: 'var(--chart-5)' } } satisfies ChartConfig
 
 export default function CxoWastagePage() {
+  const { t } = useLanguage()
   const { db, range, branchIds, scopeIds, branches } = useCxoScope()
   const colors = useBranchColors()
   const sum = useMemo(() => salesSummary(db, range, branchIds), [db, range, branchIds])
@@ -28,15 +30,15 @@ export default function CxoWastagePage() {
 
   return (
     <>
-      <PageHeader title="Wastage" description={`Wastage % = value at MRP ÷ (sales + wastage value). Alert threshold ${db.settings.wastageAlertPct}%.`} actions={<CxoFilterBar />} />
+      <PageHeader title={t('Wastage')} description={t('Wastage % = value at MRP ÷ (sales + wastage value). Alert threshold {threshold}%.', { threshold: db.settings.wastageAlertPct })} actions={<CxoFilterBar />} />
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <KpiCard label="Wastage %" value={formatPct(c.wastagePct)} delta={d.wastagePct} deltaLabel="pp vs previous" goodWhen="down" icon={Percent} />
-          <KpiCard label="Lost at MRP" value={formatINRCompact(c.wastageValue)} icon={Trash2} />
-          <KpiCard label="Lost at cost" value={formatINRCompact(c.wastageCost)} icon={Coins} />
-          <KpiCard label="Units wasted" value={formatNumber(c.wastageQty)} icon={Package} />
+          <KpiCard label={t('Wastage %')} value={formatPct(c.wastagePct)} delta={d.wastagePct} deltaLabel="pp vs previous" goodWhen="down" icon={Percent} />
+          <KpiCard label={t('Lost at MRP')} value={formatINRCompact(c.wastageValue)} icon={Trash2} />
+          <KpiCard label={t('Lost at cost')} value={formatINRCompact(c.wastageCost)} icon={Coins} />
+          <KpiCard label={t('Units wasted')} value={formatNumber(c.wastageQty)} icon={Package} />
         </div>
-        <ChartCard title="Wastage % by branch" description="Daily, one line per branch">
+        <ChartCard title={t('Wastage % by branch')} description={t('Daily, one line per branch')}>
           <ChartContainer config={config} className="h-72 w-full">
             <LineChart data={flat} margin={{ left: 0, right: 8, top: 8 }}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -49,23 +51,23 @@ export default function CxoWastagePage() {
           <Legend items={shown.map((b) => ({ label: b.name, color: colors[b.id] ?? 'var(--chart-1)' }))} />
         </ChartCard>
         <div className="grid gap-4 lg:grid-cols-2">
-          <ChartCard title="By reason" description="Value lost at MRP">
-            {reasons.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">No wastage recorded.</p> : (
+          <ChartCard title={t('By reason')} description={t('Value lost at MRP')}>
+            {reasons.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">{t('No wastage recorded.')}</p> : (
               <ChartContainer config={rcfg} className="h-64 w-full">
                 <BarChart data={reasons} layout="vertical" margin={{ left: 0, right: 12 }}>
                   <CartesianGrid horizontal={false} strokeDasharray="3 3" />
                   <XAxis type="number" tickLine={false} axisLine={false} tickFormatter={(v: number) => formatINRCompact(v)} />
-                  <YAxis type="category" dataKey="reason" width={100} tickLine={false} axisLine={false} interval={0} />
+                  <YAxis type="category" dataKey="reason" tickFormatter={(reason) => t(reason)} width={100} tickLine={false} axisLine={false} interval={0} />
                   <ChartTooltip cursor={false} content={<ChartTooltipContent formatter={(v) => <span className="font-mono tabular-nums">{formatINR(Number(v))}</span>} />} />
                   <Bar dataKey="value" fill="var(--color-value)" radius={[0, 4, 4, 0]} maxBarSize={20} />
                 </BarChart>
               </ChartContainer>
             )}
           </ChartCard>
-          <ChartCard title="Top wasted products">
-            {topWasted.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">No wastage recorded.</p> : (
+          <ChartCard title={t('Top wasted products')}>
+            {topWasted.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">{t('No wastage recorded.')}</p> : (
               <Table>
-                <TableHeader><TableRow><TableHead>Product</TableHead><TableHead className="text-right">Qty</TableHead><TableHead className="text-right">At MRP</TableHead><TableHead className="text-right">Waste %</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>{t('Product')}</TableHead><TableHead className="text-right">{t('Qty')}</TableHead><TableHead className="text-right">{t('At MRP')}</TableHead><TableHead className="text-right">{t('Waste %')}</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {topWasted.map((r) => (
                     <TableRow key={r.productId}>

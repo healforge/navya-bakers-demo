@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useMemo } from 'react'
 import { Link } from 'react-router'
 import { AlertTriangle, ArrowRight, Calculator, CheckCircle2, ClipboardList, IndianRupee, PackageOpen, ReceiptText, Trash2, Truck } from 'lucide-react'
@@ -22,6 +23,7 @@ const pctDelta = (cur: number, prev: number): number | undefined => (prev > 0 ? 
 interface Task { key: string; icon: typeof Truck; title: string; detail: string; to: string; tone: 'todo' | 'warn' | 'done'; badge?: React.ReactNode }
 
 export default function BranchHomePage() {
+  const { t } = useLanguage()
   const branch = useCurrentBranch()
   const user = useRequireUser()
   const db = useDb((d) => d)
@@ -48,7 +50,7 @@ export default function BranchHomePage() {
     }
   }, [db, branch.id, today, hour])
 
-  const series = useMemo(() => isoRange(addDaysISO(today, -6), today).map((d) => ({ date: d, label: formatDateShort(d).split(',')[0], total: getSalesDay(db, branch.id, d)?.total ?? 0 })), [db, branch.id, today])
+  const series = useMemo(() => isoRange(addDaysISO(today, -6), today).map((d) => ({ date: d, label: t(formatDateShort(d).split(',')[0]), total: getSalesDay(db, branch.id, d)?.total ?? 0 })), [db, branch.id, today, t])
 
   const stock = useMemo(() => getBranchStock(db, branch.id, today), [db, branch.id, today])
   const lowStock = useMemo(() => stock.filter((s) => s.product.active && s.onHand <= 5).sort((a, b) => a.onHand - b.onHand), [stock])
@@ -57,45 +59,45 @@ export default function BranchHomePage() {
     const out: Task[] = []
     const transit = db.dispatches.filter((d) => d.branchId === branch.id && d.status === 'in_transit')
     out.push(transit.length
-      ? { key: 'recv', icon: Truck, title: `Receive ${transit.length} dispatch${transit.length > 1 ? 'es' : ''}`, detail: transit.map((d) => d.number).join(', ') + ' in transit', to: '/branch/receive', tone: 'todo' }
-      : { key: 'recv', icon: Truck, title: 'No dispatch in transit', detail: 'Nothing to receive right now', to: '/branch/receive', tone: 'done' })
+      ? { key: 'recv', icon: Truck, title: t('Receive {count} dispatch{plural}', { count: transit.length, plural: transit.length > 1 ? 'es' : '' }), detail: t('{numbers} in transit', { numbers: transit.map((d) => d.number).join(', ') }), to: '/branch/receive', tone: 'todo' }
+      : { key: 'recv', icon: Truck, title: t('No dispatch in transit'), detail: t('Nothing to receive right now'), to: '/branch/receive', tone: 'done' })
 
     const ind = getIndent(db, branch.id, tomorrow)
     const cutoff = indentCutoff(db.settings, tomorrow)
     const ms = cutoff.getTime() - now.getTime()
     if (ind && ind.status !== 'draft') {
-      out.push({ key: 'indent', icon: ClipboardList, title: "Tomorrow's indent submitted", detail: ind.late ? 'Submitted after cutoff' : 'On time', to: '/branch/indent', tone: 'done', badge: <StatusBadge status={ind.status} /> })
+      out.push({ key: 'indent', icon: ClipboardList, title: t('Tomorrow\'s indent submitted'), detail: t(ind.late ? 'Submitted after cutoff' : 'On time'), to: '/branch/indent', tone: 'done', badge: <StatusBadge status={ind.status} /> })
     } else if (ms > 0) {
-      out.push({ key: 'indent', icon: ClipboardList, title: ind ? "Submit tomorrow's indent (draft saved)" : "Indent for tomorrow", detail: `Cutoff ${db.settings.indentCutoffTime} · ${countdownLabel(ms)} left`, to: '/branch/indent', tone: 'todo' })
+      out.push({ key: 'indent', icon: ClipboardList, title: t(ind ? "Submit tomorrow's indent (draft saved)" : "Indent for tomorrow"), detail: t('Cutoff {time} · {remaining} left', { time: db.settings.indentCutoffTime, remaining: countdownLabel(ms, t) }), to: '/branch/indent', tone: 'todo' })
     } else {
-      out.push({ key: 'indent', icon: ClipboardList, title: "Tomorrow's indent is late", detail: `Cutoff ${db.settings.indentCutoffTime} has passed — submit now to be flagged late`, to: '/branch/indent', tone: 'warn', badge: <StatusBadge status="late" /> })
+      out.push({ key: 'indent', icon: ClipboardList, title: t('Tomorrow\'s indent is late'), detail: t('Cutoff {time} has passed — submit now to be flagged late', { time: db.settings.indentCutoffTime }), to: '/branch/indent', tone: 'warn', badge: <StatusBadge status="late" /> })
     }
 
     const expired = expiredBatches(db, branch.id, today)
     const expiredQty = expired.reduce((s, b) => s + b.qtyRemaining, 0)
     out.push(expired.length
-      ? { key: 'exp', icon: Trash2, title: 'Expired stock to write off', detail: `${expiredQty} units in ${expired.length} batch${expired.length > 1 ? 'es' : ''}`, to: '/branch/wastage', tone: 'warn' }
-      : { key: 'exp', icon: Trash2, title: 'No expired stock', detail: 'All batches are within date', to: '/branch/wastage', tone: 'done' })
+      ? { key: 'exp', icon: Trash2, title: t('Expired stock to write off'), detail: t('{count} units in {batches} batch{plural}', { count: expiredQty, batches: expired.length, plural: expired.length > 1 ? 'es' : '' }), to: '/branch/wastage', tone: 'warn' }
+      : { key: 'exp', icon: Trash2, title: t('No expired stock'), detail: t('All batches are within date'), to: '/branch/wastage', tone: 'done' })
 
     const closed = getDayClose(db, branch.id, today)
     out.push(closed
-      ? { key: 'close', icon: Calculator, title: 'Day closed', detail: 'Cash reconciled for today', to: '/branch/day-end', tone: 'done' }
-      : { key: 'close', icon: Calculator, title: 'Day close pending', detail: 'Count cash and close the day after the last bill', to: '/branch/day-end', tone: 'todo' })
+      ? { key: 'close', icon: Calculator, title: t('Day closed'), detail: t('Cash reconciled for today'), to: '/branch/day-end', tone: 'done' }
+      : { key: 'close', icon: Calculator, title: t('Day close pending'), detail: t('Count cash and close the day after the last bill'), to: '/branch/day-end', tone: 'todo' })
     return out
-  }, [db, branch.id, today, tomorrow, now])
+  }, [db, branch.id, today, tomorrow, now, t])
 
   return (
     <>
-      <PageHeader title={`Hello, ${user.name.split(' ')[0]}`} description={`${branch.name} · ${formatDateShort(today)}`} />
+      <PageHeader title={t('Hello, {name}', { name: user.name.split(' ')[0] })} description={`${branch.name} · ${formatDateShort(today)}`} />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <KpiCard label="Today's sales" icon={IndianRupee} value={formatINR(kpi.total)} delta={kpi.salesDelta} deltaLabel="vs last week, same hour" />
-        <KpiCard label="Bills" icon={ReceiptText} value={formatNumber(kpi.bills)} delta={kpi.billsDelta} deltaLabel="vs last week, same hour (est.)" />
-        <KpiCard label="Avg bill value" icon={Calculator} value={formatINR(kpi.abv)} delta={kpi.abvDelta} deltaLabel="vs last week" />
+        <KpiCard label={t('Today\'s sales')} icon={IndianRupee} value={formatINR(kpi.total)} delta={kpi.salesDelta} deltaLabel={t('vs last week, same hour')} />
+        <KpiCard label={t('Bills')} icon={ReceiptText} value={formatNumber(kpi.bills)} delta={kpi.billsDelta} deltaLabel={t('vs last week, same hour (est.)')} />
+        <KpiCard label={t('Avg bill value')} icon={Calculator} value={formatINR(kpi.abv)} delta={kpi.abvDelta} deltaLabel={t('vs last week')} />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>Tasks</CardTitle><CardDescription>What needs attention today</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{t('Tasks')}</CardTitle><CardDescription>{t('What needs attention today')}</CardDescription></CardHeader>
           <CardContent className="space-y-2">
             {tasks.map((t) => (
               <Link key={t.key} to={t.to} className={cn('flex min-h-14 items-center gap-3 rounded-lg border p-3 transition hover:bg-muted/60',
@@ -113,7 +115,7 @@ export default function BranchHomePage() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Last 7 days</CardTitle><CardDescription>Daily sales</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{t('Last 7 days')}</CardTitle><CardDescription>{t('Daily sales')}</CardDescription></CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-48 w-full">
               <BarChart data={series} margin={{ left: 4, right: 4 }}>
@@ -129,12 +131,12 @@ export default function BranchHomePage() {
 
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><PackageOpen className="size-5" /> Low &amp; out of stock</CardTitle>
-          <CardDescription>5 or fewer sellable units left</CardDescription>
+          <CardTitle className="flex items-center gap-2"><PackageOpen className="size-5" /> {t('Low & out of stock')}</CardTitle>
+          <CardDescription>{t('5 or fewer sellable units left')}</CardDescription>
         </CardHeader>
         <CardContent>
           {lowStock.length === 0 ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground"><CheckCircle2 className="size-4 text-success" /> Everything is well stocked.</div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground"><CheckCircle2 className="size-4 text-success" /> {t('Everything is well stocked.')}</div>
           ) : (
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {lowStock.map((s) => (
@@ -148,7 +150,7 @@ export default function BranchHomePage() {
               ))}
             </div>
           )}
-          {lowStock.length > 0 && <div className="mt-3 flex items-center gap-1 text-xs text-muted-foreground"><AlertTriangle className="size-3.5" /> Consider a top-up in tomorrow's indent.</div>}
+          {lowStock.length > 0 && <div className="mt-3 flex items-center gap-1 text-xs text-muted-foreground"><AlertTriangle className="size-3.5" /> {t('Consider a top-up in tomorrow\'s indent.')}</div>}
         </CardContent>
       </Card>
     </>

@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { Download } from 'lucide-react'
 import { EmptyState } from '@/components/common'
 import { Button } from '@/components/ui/button'
@@ -23,20 +24,21 @@ function fmt(v: Cell, kind: ColKind): string {
 
 /** Generic report table with sticky-less simple layout, optional totals row and CSV export. */
 export function ReportTable({ filename, headers, kinds, rows, totals }: { filename: string; headers: string[]; kinds: ColKind[]; rows: Cell[][]; totals?: Cell[] }) {
-  if (rows.length === 0) return <EmptyState title="No data for the selected filters" />
+  const { t } = useLanguage()
+  if (rows.length === 0) return <EmptyState title={t('No data for the selected filters')} />
   const exportCsv = () => downloadCSV(filename, headers, totals ? [...rows, totals] : rows)
   return (
     <div className="space-y-2">
-      <div className="flex justify-end"><Button variant="outline" size="sm" onClick={exportCsv}><Download />Export CSV</Button></div>
+      <div className="flex justify-end"><Button variant="outline" size="sm" onClick={exportCsv}><Download />{t('Export CSV')}</Button></div>
       <div className="overflow-x-auto rounded-xl border bg-card">
         <Table>
-          <TableHeader><TableRow>{headers.map((h, i) => <TableHead key={h + i} className={cn(kinds[i] !== 'text' && 'text-right')}>{h}</TableHead>)}</TableRow></TableHeader>
+          <TableHeader><TableRow>{headers.map((h, i) => <TableHead key={h + i} className={cn(kinds[i] !== 'text' && 'text-right')}>{t(h)}</TableHead>)}</TableRow></TableHeader>
           <TableBody>
             {rows.map((r, ri) => (
               <TableRow key={ri}>{r.map((c, i) => <TableCell key={i} className={cn(kinds[i] !== 'text' && 'text-right tabular-nums', kinds[i] === 'signedInr' && typeof c === 'number' && c !== 0 && (c < 0 ? 'text-danger' : 'text-success'))}>{fmt(c, kinds[i] ?? 'text')}</TableCell>)}</TableRow>
             ))}
           </TableBody>
-          {totals && <TableFooter><TableRow>{totals.map((c, i) => <TableCell key={i} className={cn(kinds[i] !== 'text' && 'text-right tabular-nums')}>{fmt(c, kinds[i] ?? 'text')}</TableCell>)}</TableRow></TableFooter>}
+          {totals && <TableFooter><TableRow>{totals.map((c, i) => <TableCell key={i} className={cn(kinds[i] !== 'text' && 'text-right tabular-nums')}>{t(fmt(c, kinds[i] ?? 'text'))}</TableCell>)}</TableRow></TableFooter>}
         </Table>
       </div>
     </div>

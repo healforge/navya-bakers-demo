@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -16,6 +17,7 @@ const TABS: { value: 'all' | POStatus; label: string }[] = [
 ]
 
 export default function PurchaseListPage() {
+  const { t } = useLanguage()
   const db = useDb((d) => d)
   const nav = useNavigate()
   const [tab, setTab] = useState<'all' | POStatus>('all')
@@ -39,11 +41,11 @@ export default function PurchaseListPage() {
 
   return (
     <>
-      <PageHeader title="Purchase orders" description="Order raw materials from suppliers and receive goods (GRN)." actions={<Button onClick={() => nav('/ho/purchase/new')}><Plus />New PO</Button>} />
+      <PageHeader title={t('Purchase orders')} description={t('Order raw materials from suppliers and receive goods (GRN).')} actions={<Button onClick={() => nav('/ho/purchase/new')}><Plus />{t('New PO')}</Button>} />
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mb-3">
-        <TabsList>{TABS.map((t) => <TabsTrigger key={t.value} value={t.value}>{t.label} ({counts[t.value] ?? 0})</TabsTrigger>)}</TabsList>
+        <TabsList>{TABS.map((tab) => <TabsTrigger key={tab.value} value={tab.value}>{t(tab.label)} ({counts[tab.value] ?? 0})</TabsTrigger>)}</TabsList>
       </Tabs>
-      <DataTable columns={columns} data={rows} getRowId={(p) => p.id} onRowClick={(p) => nav(`/ho/purchase/${p.id}`)} searchPlaceholder="Search POs…" pageSize={15} emptyTitle="No purchase orders" initialSorting={[]} />
+      <DataTable columns={columns} data={rows} getRowId={(p) => p.id} onRowClick={(p) => nav(`/ho/purchase/${p.id}`)} searchPlaceholder={t('Search POs…')} pageSize={15} emptyTitle={t('No purchase orders')} initialSorting={[]} />
     </>
   )
 }

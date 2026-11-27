@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { SlidersHorizontal } from 'lucide-react'
 import { BranchSelect } from '@/components/common/BranchSelect'
 import { DateRangeSelect } from '@/components/common/DateRangeSelect'
@@ -8,6 +9,7 @@ import { useCxoFilters } from '../filters'
 
 /** Desktop: inline controls. Phone: one button opening a Sheet. */
 export function CxoFilterBar() {
+  const { t } = useLanguage()
   const { preset, branchIds, setPreset, setBranchIds } = useCxoFilters()
   const presetLabel = RANGE_PRESETS.find((p) => p.value === preset)?.label ?? ''
   const branchLabel = branchIds.length === 0 ? 'All branches' : `${branchIds.length} branch${branchIds.length > 1 ? 'es' : ''}`
@@ -23,12 +25,12 @@ export function CxoFilterBar() {
         </SheetTrigger>
         <SheetContent side="bottom" className="gap-3 p-4">
           <SheetHeader className="p-0">
-            <SheetTitle>Filters</SheetTitle>
-            <SheetDescription>Applies to all CXO pages.</SheetDescription>
+            <SheetTitle>{t('Filters')}</SheetTitle>
+            <SheetDescription>{t('Applies to all CXO pages.')}</SheetDescription>
           </SheetHeader>
-          <div className="space-y-1 text-xs text-muted-foreground">Period</div>
+          <div className="space-y-1 text-xs text-muted-foreground">{t('Period')}</div>
           <DateRangeSelect value={preset} onChange={setPreset} />
-          <div className="space-y-1 text-xs text-muted-foreground">Branches</div>
+          <div className="space-y-1 text-xs text-muted-foreground">{t('Branches')}</div>
           <BranchSelect mode="multi" value={branchIds} onChange={setBranchIds} className="w-full justify-between" />
         </SheetContent>
       </Sheet>

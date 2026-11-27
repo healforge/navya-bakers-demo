@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -13,6 +14,7 @@ type Props =
 
 /** single: value is a branchId (or 'all' when allowAll). multi: value is branchIds[], [] means all. */
 export function BranchSelect(props: Props) {
+  const { t } = useLanguage()
   const branches = useDb((db) => db.branches)
   const active = branches.filter((b) => b.active)
 
@@ -26,7 +28,7 @@ export function BranchSelect(props: Props) {
           <Button variant="outline" size="sm" className={props.className}>{label} <ChevronDown /></Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-56 space-y-1 p-2">
-          <button type="button" className="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted" onClick={() => onChange([])}>All branches</button>
+          <button type="button" className="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted" onClick={() => onChange([])}>{t('All branches')}</button>
           {active.map((b) => (
             <label key={b.id} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted">
               <Checkbox checked={value.includes(b.id)} onCheckedChange={() => toggle(b.id)} />
@@ -40,9 +42,9 @@ export function BranchSelect(props: Props) {
 
   return (
     <Select value={props.value} onValueChange={props.onChange}>
-      <SelectTrigger className={props.className ?? 'w-48'}><SelectValue placeholder="Branch" /></SelectTrigger>
+      <SelectTrigger className={props.className ?? 'w-48'}><SelectValue placeholder={t('Branch')} /></SelectTrigger>
       <SelectContent>
-        {props.allowAll && <SelectItem value={ALL_BRANCHES}>All branches</SelectItem>}
+        {props.allowAll && <SelectItem value={ALL_BRANCHES}>{t('All branches')}</SelectItem>}
         {active.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
       </SelectContent>
     </Select>

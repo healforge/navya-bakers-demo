@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useEffect, useMemo, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -28,6 +29,7 @@ type FormT = z.infer<typeof schema>
 const BLANK: FormT = { name: '', contactPerson: '', phone: '', city: '', gstin: '', materialIds: [], active: true }
 
 export default function SuppliersPage() {
+  const { t } = useLanguage()
   const db = useDb((d) => d)
   const [editing, setEditing] = useState<Supplier | 'new' | null>(null)
   const rm = useMemo(() => new Map(db.rawMaterials.map((m) => [m.id, m.name])), [db.rawMaterials])
@@ -43,14 +45,15 @@ export default function SuppliersPage() {
 
   return (
     <>
-      <PageHeader title="Suppliers" actions={<Button onClick={() => setEditing('new')}><Plus />New supplier</Button>} />
-      <DataTable columns={columns} data={db.suppliers} getRowId={(s) => s.id} onRowClick={setEditing} searchPlaceholder="Search suppliers…" />
+      <PageHeader title={t('Suppliers')} actions={<Button onClick={() => setEditing('new')}><Plus />{t('New supplier')}</Button>} />
+      <DataTable columns={columns} data={db.suppliers} getRowId={(s) => s.id} onRowClick={setEditing} searchPlaceholder={t('Search suppliers…')} />
       <SupplierDialog target={editing} onClose={() => setEditing(null)} />
     </>
   )
 }
 
 function SupplierDialog({ target, onClose }: { target: Supplier | 'new' | null; onClose: () => void }) {
+  const { t } = useLanguage()
   const materials = useDb((d) => d.rawMaterials)
   const sup = target && target !== 'new' ? target : undefined
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<FormT>({ resolver: zodResolver(schema), defaultValues: BLANK })
@@ -59,21 +62,21 @@ function SupplierDialog({ target, onClose }: { target: Supplier | 'new' | null; 
   }, [target, sup, reset])
 
   const onSubmit = handleSubmit(async (v) => {
-    if (await run(() => dbActions.upsertSupplier({ ...v, gstin: v.gstin ? v.gstin.toUpperCase() : undefined, id: sup?.id }), sup ? 'Supplier updated' : 'Supplier created')) onClose()
+    if (await run(t, () => dbActions.upsertSupplier({ ...v, gstin: v.gstin ? v.gstin.toUpperCase() : undefined, id: sup?.id }), sup ? 'Supplier updated' : 'Supplier created')) onClose()
   })
 
   return (
     <Dialog open={!!target} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-lg">
-        <DialogHeader><DialogTitle>{sup ? `Edit ${sup.name}` : 'New supplier'}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{sup ? t('Edit {name}', { name: sup.name }) : t('New supplier')}</DialogTitle></DialogHeader>
         <form onSubmit={onSubmit} className="grid grid-cols-2 gap-3">
-          <FormRow label="Name" error={errors.name?.message} className="col-span-2"><Input {...register('name')} /></FormRow>
-          <FormRow label="Contact person"><Input {...register('contactPerson')} /></FormRow>
-          <FormRow label="Phone" error={errors.phone?.message}><Input {...register('phone')} /></FormRow>
-          <FormRow label="City"><Input {...register('city')} /></FormRow>
-          <FormRow label="GSTIN (optional)" error={errors.gstin?.message}><Input {...register('gstin')} /></FormRow>
+          <FormRow label={t('Name')} error={errors.name?.message} className="col-span-2"><Input {...register('name')} /></FormRow>
+          <FormRow label={t('Contact person')}><Input {...register('contactPerson')} /></FormRow>
+          <FormRow label={t('Phone')} error={errors.phone?.message}><Input {...register('phone')} /></FormRow>
+          <FormRow label={t('City')}><Input {...register('city')} /></FormRow>
+          <FormRow label={t('GSTIN (optional)')} error={errors.gstin?.message}><Input {...register('gstin')} /></FormRow>
           <div className="col-span-2 space-y-1.5">
-            <Label>Supplies</Label>
+            <Label>{t('Supplies')}</Label>
             <Controller control={control} name="materialIds" render={({ field }) => (
               <div className="grid max-h-40 grid-cols-2 gap-1 overflow-y-auto rounded-lg border p-2">
                 {materials.map((m) => (
@@ -87,9 +90,9 @@ function SupplierDialog({ target, onClose }: { target: Supplier | 'new' | null; 
           </div>
           <div className="col-span-2 flex items-center gap-2">
             <Controller control={control} name="active" render={({ field }) => <Switch id="s-active" checked={field.value} onCheckedChange={field.onChange} />} />
-            <Label htmlFor="s-active">Active</Label>
+            <Label htmlFor="s-active">{t('Active')}</Label>
           </div>
-          <DialogFooter className="col-span-2"><Button type="button" variant="outline" onClick={onClose}>Cancel</Button><Button type="submit">Save</Button></DialogFooter>
+          <DialogFooter className="col-span-2"><Button type="button" variant="outline" onClick={onClose}>{t('Cancel')}</Button><Button type="submit">{t('Save')}</Button></DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

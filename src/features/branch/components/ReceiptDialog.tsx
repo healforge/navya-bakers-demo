@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { Printer } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -14,6 +15,7 @@ export function ReceiptDialog({ bill, branch, open, onOpenChange, onNewBill, new
   onNewBill?: () => void
   newBillLabel?: string
 }) {
+  const { t } = useLanguage()
   const users = useDb((d) => d.users)
   if (!bill) return null
   const cashier = users.find((u) => u.id === bill.cashierId)?.name ?? 'Cashier'
@@ -21,14 +23,14 @@ export function ReceiptDialog({ bill, branch, open, onOpenChange, onNewBill, new
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92dvh] gap-3 overflow-y-auto sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Bill {bill.number}</DialogTitle>
-          <DialogDescription>Receipt preview (80 mm thermal)</DialogDescription>
+          <DialogTitle>{t('Bill')} {bill.number}</DialogTitle>
+          <DialogDescription>{t('Receipt preview (80 mm thermal)')}</DialogDescription>
         </DialogHeader>
         <div className="overflow-hidden rounded-lg border">
           <PrintArea size="80mm"><Receipt bill={bill} branch={branch} cashierName={cashier} /></PrintArea>
         </div>
         <DialogFooter className="no-print gap-2 sm:flex-row">
-          <Button variant="outline" className="h-12 flex-1" onClick={printNow}><Printer /> Print</Button>
+          <Button variant="outline" className="h-12 flex-1" onClick={printNow}><Printer /> {t('Print')}</Button>
           {onNewBill && <Button className="h-12 flex-1" onClick={onNewBill}>{newBillLabel}</Button>}
         </DialogFooter>
       </DialogContent>

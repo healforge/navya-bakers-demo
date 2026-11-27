@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -25,49 +26,50 @@ const schema = z.object({
 type FormT = z.infer<typeof schema>
 
 export default function SettingsPage() {
+  const { t } = useLanguage()
   const db = useDb((d) => d)
   const s = db.settings
   const [reset, setReset] = useState(false)
   const { register, handleSubmit, reset: resetForm, formState: { errors, isDirty } } = useForm<FormT>({ resolver: zodResolver(schema), defaultValues: s })
   useEffect(() => { resetForm(s) }, [s, resetForm])
 
-  const onSubmit = handleSubmit(async (v) => { await run(() => dbActions.updateSettings(v), 'Settings saved') })
+  const onSubmit = handleSubmit(async (v) => { await run(t, () => dbActions.updateSettings(v), 'Settings saved') })
   const num = (n: keyof FormT) => register(n, { valueAsNumber: true })
 
   return (
     <>
-      <PageHeader title="Settings" />
+      <PageHeader title={t('Settings')} />
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>Operations &amp; alerts</CardTitle><CardDescription>Thresholds that drive indent lateness and exception alerts.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{t('Operations & alerts')}</CardTitle><CardDescription>{t('Thresholds that drive indent lateness and exception alerts.')}</CardDescription></CardHeader>
           <CardContent>
             <form onSubmit={onSubmit} className="grid grid-cols-2 gap-3">
-              <FormRow label="Company name" error={errors.companyName?.message} className="col-span-2"><Input {...register('companyName')} /></FormRow>
-              <FormRow label="Indent cutoff time" error={errors.indentCutoffTime?.message} hint="On the day before delivery"><Input type="time" {...register('indentCutoffTime')} /></FormRow>
-              <FormRow label="Near-expiry window (days)" error={errors.nearExpiryDays?.message}><Input type="number" {...num('nearExpiryDays')} /></FormRow>
-              <FormRow label="Wastage alert (%)" error={errors.wastageAlertPct?.message}><Input type="number" step="0.1" {...num('wastageAlertPct')} /></FormRow>
-              <FormRow label="Sales drop alert (%)" error={errors.salesDropAlertPct?.message}><Input type="number" step="0.1" {...num('salesDropAlertPct')} /></FormRow>
-              <FormRow label="Cash variance alert (₹)" error={errors.cashVarianceAlert?.message}><Input type="number" {...num('cashVarianceAlert')} /></FormRow>
-              <FormRow label="Dispatch transit alert (hours)" error={errors.transitAlertHours?.message}><Input type="number" step="0.5" {...num('transitAlertHours')} /></FormRow>
-              <div className="col-span-2 flex gap-2"><Button type="submit" disabled={!isDirty}>Save settings</Button><Button type="button" variant="outline" disabled={!isDirty} onClick={() => resetForm(s)}>Discard</Button></div>
+              <FormRow label={t('Company name')} error={errors.companyName?.message} className="col-span-2"><Input {...register('companyName')} /></FormRow>
+              <FormRow label={t('Indent cutoff time')} error={errors.indentCutoffTime?.message} hint={t('On the day before delivery')}><Input type="time" {...register('indentCutoffTime')} /></FormRow>
+              <FormRow label={t('Near-expiry window (days)')} error={errors.nearExpiryDays?.message}><Input type="number" {...num('nearExpiryDays')} /></FormRow>
+              <FormRow label={t('Wastage alert (%)')} error={errors.wastageAlertPct?.message}><Input type="number" step="0.1" {...num('wastageAlertPct')} /></FormRow>
+              <FormRow label={t('Sales drop alert (%)')} error={errors.salesDropAlertPct?.message}><Input type="number" step="0.1" {...num('salesDropAlertPct')} /></FormRow>
+              <FormRow label={t('Cash variance alert (₹)')} error={errors.cashVarianceAlert?.message}><Input type="number" {...num('cashVarianceAlert')} /></FormRow>
+              <FormRow label={t('Dispatch transit alert (hours)')} error={errors.transitAlertHours?.message}><Input type="number" step="0.5" {...num('transitAlertHours')} /></FormRow>
+              <div className="col-span-2 flex gap-2"><Button type="submit" disabled={!isDirty}>{t('Save settings')}</Button><Button type="button" variant="outline" disabled={!isDirty} onClick={() => resetForm(s)}>{t('Discard')}</Button></div>
             </form>
           </CardContent>
         </Card>
 
         <Card className="h-fit">
-          <CardHeader><CardTitle>Demo data</CardTitle><CardDescription>All data lives in this browser only.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{t('Demo data')}</CardTitle><CardDescription>{t('All data lives in this browser only.')}</CardDescription></CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">Seeded at</span><span>{formatDateTime(db.seededAt)}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Anchor date</span><span>{formatDate(db.anchorDate)}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Bills today</span><span>{db.bills.length}</span></div>
-            <Button variant="destructive" onClick={() => setReset(true)}><RotateCcw />Reset demo data</Button>
+            <div className="flex justify-between"><span className="text-muted-foreground">{t('Seeded at')}</span><span>{formatDateTime(db.seededAt)}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">{t('Anchor date')}</span><span>{formatDate(db.anchorDate)}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">{t('Bills today')}</span><span>{db.bills.length}</span></div>
+            <Button variant="destructive" onClick={() => setReset(true)}><RotateCcw />{t('Reset demo data')}</Button>
           </CardContent>
         </Card>
       </div>
       <ConfirmDialog
-        open={reset} onOpenChange={setReset} destructive title="Reset demo data?"
-        description="All changes are discarded and a fresh 90-day dataset is generated, anchored to today."
-        confirmLabel="Reset" onConfirm={async () => { await run(() => dbActions.resetDemoData(), 'Demo data reset') }}
+        open={reset} onOpenChange={setReset} destructive title={t('Reset demo data?')}
+        description={t('All changes are discarded and a fresh 90-day dataset is generated, anchored to today.')}
+        confirmLabel={t('Reset')} onConfirm={async () => { await run(t, () => dbActions.resetDemoData(), 'Demo data reset') }}
       />
     </>
   )

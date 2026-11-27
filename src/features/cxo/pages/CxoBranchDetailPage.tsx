@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router'
 import { ArrowLeft, Percent, Receipt, ShoppingBag, Trash2, TrendingUp } from 'lucide-react'
@@ -23,6 +24,7 @@ const rcfg = { value: { label: 'Value lost (MRP)', color: 'var(--chart-5)' } } s
 const pcfg = { revenue: { label: 'Revenue', color: 'var(--chart-1)' } } satisfies ChartConfig
 
 export default function CxoBranchDetailPage() {
+  const { t } = useLanguage()
   const { branchId = '' } = useParams()
   const { db, range } = useCxoScope()
   const branch = db.branches.find((b) => b.id === branchId)
@@ -36,29 +38,29 @@ export default function CxoBranchDetailPage() {
   const cats = useMemo(() => categoryMix(db, range, ids), [db, range, ids])
   const closes = useMemo(() => db.dayCloses.filter((d) => d.branchId === branchId).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 14), [db.dayCloses, branchId])
 
-  if (!branch) return <EmptyState title="Branch not found" action={<Button asChild variant="outline"><Link to="/cxo/branches">Back to branches</Link></Button>} />
+  if (!branch) return <EmptyState title={t('Branch not found')} action={<Button asChild variant="outline"><Link to="/cxo/branches">{t('Back to branches')}</Link></Button>} />
   const c = sum.current, d = sum.deltas
   return (
     <>
       <PageHeader
         title={branch.name}
-        description={`${branch.area}, ${branch.city} · Manager ${branch.managerName}`}
-        actions={<><Button asChild variant="ghost" size="sm"><Link to="/cxo/branches"><ArrowLeft /> Branches</Link></Button><CxoFilterBar /></>}
+        description={t('{area}, {city} · Manager {name}', { area: branch.area, city: branch.city, name: branch.managerName })}
+        actions={<><Button asChild variant="ghost" size="sm"><Link to="/cxo/branches"><ArrowLeft /> {t('Branches')}</Link></Button><CxoFilterBar /></>}
       />
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-          <KpiCard label="Revenue" value={formatINRCompact(c.revenue)} delta={d.revenue} icon={TrendingUp} className="col-span-2 lg:col-span-1" />
-          <KpiCard label="Bills" value={formatNumber(c.bills)} delta={d.bills} icon={Receipt} />
-          <KpiCard label="Avg bill value" value={formatINR(c.abv)} delta={d.abv} icon={ShoppingBag} />
-          <KpiCard label="Gross margin" value={formatPct(c.grossMarginPct)} delta={d.grossMarginPct} deltaLabel="pp vs previous" icon={Percent} />
-          <KpiCard label="Wastage" value={formatPct(c.wastagePct)} delta={d.wastagePct} deltaLabel="pp vs previous" goodWhen="down" icon={Trash2} />
+          <KpiCard label={t('Revenue')} value={formatINRCompact(c.revenue)} delta={d.revenue} icon={TrendingUp} className="col-span-2 lg:col-span-1" />
+          <KpiCard label={t('Bills')} value={formatNumber(c.bills)} delta={d.bills} icon={Receipt} />
+          <KpiCard label={t('Avg bill value')} value={formatINR(c.abv)} delta={d.abv} icon={ShoppingBag} />
+          <KpiCard label={t('Gross margin')} value={formatPct(c.grossMarginPct)} delta={d.grossMarginPct} deltaLabel="pp vs previous" icon={Percent} />
+          <KpiCard label={t('Wastage')} value={formatPct(c.wastagePct)} delta={d.wastagePct} deltaLabel="pp vs previous" goodWhen="down" icon={Trash2} />
         </div>
         <div className="grid gap-4 lg:grid-cols-3">
-          <ChartCard title="Revenue trend" className="lg:col-span-2"><RevenueTrendChart data={series} /></ChartCard>
-          <ChartCard title="Category mix"><CategoryBars rows={cats} /></ChartCard>
+          <ChartCard title={t('Revenue trend')} className="lg:col-span-2"><RevenueTrendChart data={series} /></ChartCard>
+          <ChartCard title={t('Category mix')}><CategoryBars rows={cats} /></ChartCard>
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
-          <ChartCard title="Top products" description="By revenue">
+          <ChartCard title={t('Top products')} description={t('By revenue')}>
             <ChartContainer config={pcfg} className="h-72 w-full">
               <BarChart data={products} layout="vertical" margin={{ left: 0, right: 12 }}>
                 <CartesianGrid horizontal={false} strokeDasharray="3 3" />
@@ -69,7 +71,7 @@ export default function CxoBranchDetailPage() {
               </BarChart>
             </ChartContainer>
           </ChartCard>
-          <ChartCard title="Wastage trend" description="Daily wastage as % of sales + wastage">
+          <ChartCard title={t('Wastage trend')} description={t('Daily wastage as % of sales + wastage')}>
             <ChartContainer config={wcfg} className="h-72 w-full">
               <LineChart data={wTrend} margin={{ left: 0, right: 8, top: 8 }}>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -82,23 +84,23 @@ export default function CxoBranchDetailPage() {
           </ChartCard>
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
-          <ChartCard title="Wastage by reason" description="Value lost at MRP">
-            {reasons.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">No wastage recorded.</p> : (
+          <ChartCard title={t('Wastage by reason')} description={t('Value lost at MRP')}>
+            {reasons.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">{t('No wastage recorded.')}</p> : (
               <ChartContainer config={rcfg} className="h-56 w-full">
                 <BarChart data={reasons} layout="vertical" margin={{ left: 0, right: 12 }}>
                   <CartesianGrid horizontal={false} strokeDasharray="3 3" />
                   <XAxis type="number" tickLine={false} axisLine={false} tickFormatter={(v: number) => formatINRCompact(v)} />
-                  <YAxis type="category" dataKey="reason" width={100} tickLine={false} axisLine={false} interval={0} />
+                  <YAxis type="category" dataKey="reason" tickFormatter={(reason) => t(reason)} width={100} tickLine={false} axisLine={false} interval={0} />
                   <ChartTooltip cursor={false} content={<ChartTooltipContent formatter={(v) => <span className="font-mono tabular-nums">{formatINR(Number(v))}</span>} />} />
                   <Bar dataKey="value" fill="var(--color-value)" radius={[0, 4, 4, 0]} maxBarSize={18} />
                 </BarChart>
               </ChartContainer>
             )}
           </ChartCard>
-          <ChartCard title="Day-close & cash variance" description="Most recent 14 closes">
-            {closes.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">No day-closes yet.</p> : (
+          <ChartCard title={t('Day-close & cash variance')} description={t('Most recent 14 closes')}>
+            {closes.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">{t('No day-closes yet.')}</p> : (
               <Table>
-                <TableHeader><TableRow><TableHead>Date</TableHead><TableHead className="text-right">Expected</TableHead><TableHead className="text-right">Counted</TableHead><TableHead className="text-right">Variance</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>{t('Date')}</TableHead><TableHead className="text-right">{t('Expected')}</TableHead><TableHead className="text-right">{t('Counted')}</TableHead><TableHead className="text-right">{t('Variance')}</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {closes.map((x) => (
                     <TableRow key={x.id}>
@@ -106,7 +108,7 @@ export default function CxoBranchDetailPage() {
                       <TableCell className="text-right tabular-nums">{formatINR(x.expectedCash)}</TableCell>
                       <TableCell className="text-right tabular-nums">{formatINR(x.countedCash)}</TableCell>
                       <TableCell className={cn('text-right tabular-nums', x.variance < 0 && 'font-medium text-danger', x.variance > 0 && 'text-warning-foreground dark:text-warning')}>
-                        {x.variance === 0 ? <StatusBadge status="ok" label="Tally" /> : formatINR(x.variance)}
+                        {x.variance === 0 ? <StatusBadge status="ok" label={t('Tally')} /> : formatINR(x.variance)}
                       </TableCell>
                     </TableRow>
                   ))}

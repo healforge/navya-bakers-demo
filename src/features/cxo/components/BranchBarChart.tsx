@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
 import type { BranchRow } from '@/store/analytics'
@@ -9,10 +10,11 @@ const config = {
   previousRevenue: { label: 'Previous period', color: 'var(--muted-foreground)' },
 } satisfies ChartConfig
 
-const fmt = (v: unknown, n: unknown) => <span className="flex w-full justify-between gap-4"><span className="text-muted-foreground">{config[n as keyof typeof config]?.label}</span><span className="font-mono font-medium tabular-nums">{formatINR(Number(v))}</span></span>
 
 /** Revenue by branch. `compare` adds the previous period as a muted second bar. */
 export function BranchBarChart({ rows, compare = false, className = 'h-64 w-full' }: { rows: BranchRow[]; compare?: boolean; className?: string }) {
+  const { t } = useLanguage()
+  const fmt = (v: unknown, n: unknown) => <span className="flex w-full justify-between gap-4"><span className="text-muted-foreground">{t(config[n as keyof typeof config]?.label ?? '')}</span><span className="font-mono font-medium tabular-nums">{formatINR(Number(v))}</span></span>
   return (
     <>
       <ChartContainer config={config} className={className}>
@@ -25,7 +27,7 @@ export function BranchBarChart({ rows, compare = false, className = 'h-64 w-full
           <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[4, 4, 0, 0]} maxBarSize={36} />
         </BarChart>
       </ChartContainer>
-      {compare && <Legend items={[{ label: 'This period', color: 'var(--chart-1)' }, { label: 'Previous period', color: 'var(--muted-foreground)' }]} />}
+      {compare && <Legend items={[{ label: t('This period'), color: 'var(--chart-1)' }, { label: t('Previous period'), color: 'var(--muted-foreground)' }]} />}
     </>
   )
 }

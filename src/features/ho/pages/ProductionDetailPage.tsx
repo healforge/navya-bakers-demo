@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { AlertTriangle, CheckCircle2, Truck } from 'lucide-react'
@@ -16,6 +17,7 @@ import { toast } from 'sonner'
 import { run, type POPrefill } from '../components/shared'
 
 export default function ProductionDetailPage() {
+  const { t } = useLanguage()
   const { id = '' } = useParams()
   const nav = useNavigate()
   const db = useDb((d) => d)
@@ -48,7 +50,7 @@ export default function ProductionDetailPage() {
     return requirementFor(db, plan.lines.map((l) => ({ productId: l.productId, qty: plan.status === 'completed' ? (l.producedQty ?? 0) : basis ? basis[l.productId] ?? 0 : l.plannedQty })))
   }, [db, plan, producedNums])
 
-  if (!plan) return <EmptyState title="Production plan not found" action={<Button asChild variant="outline"><Link to="/ho/production">Back to plans</Link></Button>} />
+  if (!plan) return <EmptyState title={t('Production plan not found')} action={<Button asChild variant="outline"><Link to="/ho/production">{t('Back to plans')}</Link></Button>} />
 
   const editable = plan.status !== 'completed'
   const shortages = req.filter((r) => r.shortfall > 0)
@@ -58,7 +60,7 @@ export default function ProductionDetailPage() {
     if (raw === undefined) return
     const n = Number(raw)
     if (raw === '' || n === current) { setPlanned(({ [productId]: _, ...rest }) => rest); return }
-    if (!(await run(() => dbActions.updatePlanLine(plan.id, productId, n)))) setPlanned(({ [productId]: _, ...rest }) => rest)
+    if (!(await run(t, () => dbActions.updatePlanLine(plan.id, productId, n)))) setPlanned(({ [productId]: _, ...rest }) => rest)
   }
 
   const createPOs = () => {
@@ -78,11 +80,11 @@ export default function ProductionDetailPage() {
     try {
       dbActions.completeProduction(plan.id, { ...producedNums })
       setShortErr(null)
-      toast.success('Production recorded')
+      toast.success(t('Production recorded'))
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Something went wrong'
       if (msg.startsWith('Not enough')) setShortErr(msg)
-      else toast.error(msg)
+      else toast.error(t(msg))
     }
   }
 
@@ -90,13 +92,13 @@ export default function ProductionDetailPage() {
     <>
       <PageHeader
         title={`${plan.number} · ${formatDate(plan.date)}`}
-        description={<span className="inline-flex items-center gap-2">Production plan <StatusBadge status={plan.status} /></span>}
+        description={<span className="inline-flex items-center gap-2">{t('Production plan')} <StatusBadge status={plan.status} /></span>}
         actions={
           <>
-            <Button variant="outline" asChild><Link to="/ho/production">All plans</Link></Button>
-            {plan.status === 'draft' && <Button variant="outline" onClick={() => run(() => dbActions.generateProductionPlan(plan.date), 'Re-consolidated from submitted indents')}>Reset from indents</Button>}
-            {plan.status === 'draft' && <Button onClick={() => setConfirmOpen(true)}><CheckCircle2 />Confirm plan</Button>}
-            {plan.status === 'completed' && <Button onClick={() => nav('/ho/dispatch')}><Truck />Go to dispatch</Button>}
+            <Button variant="outline" asChild><Link to="/ho/production">{t('All plans')}</Link></Button>
+            {plan.status === 'draft' && <Button variant="outline" onClick={() => run(t, () => dbActions.generateProductionPlan(plan.date), 'Re-consolidated from submitted indents')}>{t('Reset from indents')}</Button>}
+            {plan.status === 'draft' && <Button onClick={() => setConfirmOpen(true)}><CheckCircle2 />{t('Confirm plan')}</Button>}
+            {plan.status === 'completed' && <Button onClick={() => nav('/ho/dispatch')}><Truck />{t('Go to dispatch')}</Button>}
           </>
         }
       />
@@ -104,22 +106,22 @@ export default function ProductionDetailPage() {
       {lateCount > 0 && (
         <Alert className="mb-4">
           <AlertTriangle />
-          <AlertTitle>{lateCount} late indent{lateCount > 1 ? 's' : ''} submitted after confirmation</AlertTitle>
+          <AlertTitle>{t('{count} late indent{plural} submitted after confirmation', { count: lateCount, plural: lateCount > 1 ? 's' : '' })}</AlertTitle>
           <AlertDescription>
-            <Button size="sm" className="mt-2" onClick={() => run(() => dbActions.reconsolidatePlan(plan.id), 'Late indents merged into plan')}>Re-consolidate</Button>
+            <Button size="sm" className="mt-2" onClick={() => run(t, () => dbActions.reconsolidatePlan(plan.id), 'Late indents merged into plan')}>{t('Re-consolidate')}</Button>
           </AlertDescription>
         </Alert>
       )}
 
       <Card className="mb-4">
-        <CardHeader><CardTitle>Products</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t('Products')}</CardTitle></CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Product</TableHead><TableHead className="text-right">Indented</TableHead>
-                <TableHead className="text-right">Planned</TableHead>
-                {plan.status !== 'draft' && <TableHead className="text-right">Produced</TableHead>}
+                <TableHead>{t('Product')}</TableHead><TableHead className="text-right">{t('Indented')}</TableHead>
+                <TableHead className="text-right">{t('Planned')}</TableHead>
+                {plan.status !== 'draft' && <TableHead className="text-right">{t('Produced')}</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -130,7 +132,7 @@ export default function ProductionDetailPage() {
                   <TableCell className="text-right">
                     {editable ? (
                       <Input
-                        type="number" min={0} step={1} aria-label={`Planned ${productName(db, l.productId)}`}
+                        type="number" min={0} step={1} aria-label={t('Planned {product}', { product: productName(db, l.productId) })}
                         className="ml-auto h-8 w-24 text-right tabular-nums"
                         value={planned[l.productId] ?? String(l.plannedQty)}
                         onChange={(e) => setPlanned((s) => ({ ...s, [l.productId]: e.target.value }))}
@@ -142,7 +144,7 @@ export default function ProductionDetailPage() {
                   {plan.status === 'confirmed' && (
                     <TableCell className="text-right">
                       <Input
-                        type="number" min={0} step={1} aria-label={`Produced ${productName(db, l.productId)}`}
+                        type="number" min={0} step={1} aria-label={t('Produced {product}', { product: productName(db, l.productId) })}
                         className="ml-auto h-8 w-24 text-right tabular-nums"
                         value={produced[l.productId] ?? String(l.plannedQty)}
                         onChange={(e) => { setProduced((s) => ({ ...s, [l.productId]: e.target.value })); setShortErr(null) }}
@@ -161,12 +163,12 @@ export default function ProductionDetailPage() {
 
       <Card className="mb-4">
         <CardHeader><CardTitle className="flex items-center justify-between">
-          Raw-material requirement{plan.status === 'completed' ? ' (consumed)' : ''}
+          {t('Raw-material requirement')}{plan.status === 'completed' ? t(' (consumed)') : ''}
           {plan.status !== 'completed' && shortages.length > 0 && (
             <span className="flex flex-wrap gap-2">
               {poGroups.map((g, i) => (
                 <Button key={i} size="sm" variant="outline" onClick={() => nav('/ho/purchase/new', { state: g })}>
-                  Create PO for shortfall{g.supplierId ? ` · ${sup.get(g.supplierId)?.name ?? ''}` : ' · no preferred supplier'}
+                  {t('Create PO for shortfall')}{g.supplierId ? ` · ${sup.get(g.supplierId)?.name ?? ''}` : t(' · no preferred supplier')}
                 </Button>
               ))}
             </span>
@@ -176,8 +178,8 @@ export default function ProductionDetailPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Material</TableHead><TableHead className="text-right">Required</TableHead>
-                {plan.status !== 'completed' && <><TableHead className="text-right">In stock</TableHead><TableHead className="text-right">Shortfall</TableHead></>}
+                <TableHead>{t('Material')}</TableHead><TableHead className="text-right">{t('Required')}</TableHead>
+                {plan.status !== 'completed' && <><TableHead className="text-right">{t('In stock')}</TableHead><TableHead className="text-right">{t('Shortfall')}</TableHead></>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -203,26 +205,26 @@ export default function ProductionDetailPage() {
           {shortErr && (
             <Alert variant="destructive">
               <AlertTriangle />
-              <AlertTitle>Cannot complete production</AlertTitle>
+              <AlertTitle>{t('Cannot complete production')}</AlertTitle>
               <AlertDescription>
                 <p>{shortErr}</p>
-                <Button size="sm" variant="destructive" className="mt-2" onClick={() => setForceOpen(true)}>Complete anyway (force)</Button>
+                <Button size="sm" variant="destructive" className="mt-2" onClick={() => setForceOpen(true)}>{t('Complete anyway (force)')}</Button>
               </AlertDescription>
             </Alert>
           )}
-          <Button onClick={complete}><CheckCircle2 />Record production</Button>
+          <Button onClick={complete}><CheckCircle2 />{t('Record production')}</Button>
         </div>
       )}
 
       <ConfirmDialog
-        open={confirmOpen} onOpenChange={setConfirmOpen} title="Confirm production plan?"
-        description="Submitted indents for this date move to 'in production'. Later indents can be merged with Re-consolidate."
-        confirmLabel="Confirm plan" onConfirm={async () => { await run(() => dbActions.confirmPlan(plan.id), 'Plan confirmed') }}
+        open={confirmOpen} onOpenChange={setConfirmOpen} title={t('Confirm production plan?')}
+        description={t('Submitted indents for this date move to \'in production\'. Later indents can be merged with Re-consolidate.')}
+        confirmLabel={t('Confirm plan')} onConfirm={async () => { await run(t, () => dbActions.confirmPlan(plan.id), 'Plan confirmed') }}
       />
       <ConfirmDialog
-        open={forceOpen} onOpenChange={setForceOpen} destructive title="Complete despite raw-material shortfall?"
-        description="Raw material stock will go negative. Only do this if the stock count in the system is wrong."
-        confirmLabel="Complete anyway" onConfirm={async () => { if (await run(() => dbActions.completeProduction(plan.id, producedNums, { force: true }), 'Production recorded (forced)')) setShortErr(null) }}
+        open={forceOpen} onOpenChange={setForceOpen} destructive title={t('Complete despite raw-material shortfall?')}
+        description={t('Raw material stock will go negative. Only do this if the stock count in the system is wrong.')}
+        confirmLabel={t('Complete anyway')} onConfirm={async () => { if (await run(t, () => dbActions.completeProduction(plan.id, producedNums, { force: true }), 'Production recorded (forced)')) setShortErr(null) }}
       />
     </>
   )

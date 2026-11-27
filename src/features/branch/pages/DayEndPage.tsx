@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useMemo, useState } from 'react'
 import { Lock, LockOpen, Trash2, Plus } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -35,6 +36,7 @@ const Row = ({ label, value, strong, neg }: { label: string; value: number; stro
 )
 
 export default function DayEndPage() {
+  const { t } = useLanguage()
   const branch = useCurrentBranch()
   const user = useRequireUser()
   const db = useDb((d) => d)
@@ -57,69 +59,69 @@ export default function DayEndPage() {
   const threshold = db.settings.cashVarianceAlert
 
   const addExpense = () => {
-    if (run(() => { dbActions.addExpense({ branchId: branch.id, category: cat, amount: Number(amount), note: expNote || undefined }) }, 'Expense added')) { setAmount(''); setExpNote('') }
+    if (run(t, () => { dbActions.addExpense({ branchId: branch.id, category: cat, amount: Number(amount), note: expNote || undefined }) }, 'Expense added')) { setAmount(''); setExpNote('') }
   }
-  const close = () => void run(() => { dbActions.closeDay({ branchId: branch.id, date: today, countedCash: counted, denominations: denomRecord(denoms), notes: notes || undefined, userId: user.id }) }, 'Day closed')
-  const reopen = () => void run(() => { dbActions.reopenDay(branch.id, today) }, 'Day reopened')
+  const close = () => void run(t, () => { dbActions.closeDay({ branchId: branch.id, date: today, countedCash: counted, denominations: denomRecord(denoms), notes: notes || undefined, userId: user.id }) }, 'Day closed')
+  const reopen = () => void run(t, () => { dbActions.reopenDay(branch.id, today) }, 'Day reopened')
 
   return (
     <>
-      <PageHeader title="Day end" description={`${branch.name} · ${formatDate(today)}`} actions={closed ? <StatusBadge status="closed" /> : <StatusBadge status="open" />} />
+      <PageHeader title={t('Day end')} description={`${branch.name} · ${formatDate(today)}`} actions={closed ? <StatusBadge status="closed" /> : <StatusBadge status="open" />} />
       {closed && (
         <Alert className="mb-4">
           <Lock />
-          <AlertTitle>Day closed</AlertTitle>
+          <AlertTitle>{t('Day closed')}</AlertTitle>
           <AlertDescription className="flex flex-wrap items-center gap-3">
-            Closed {formatDateTime(closed.closedAt)}. Billing and expenses are locked.
-            <Button variant="outline" className="h-11" onClick={() => setConfirmReopen(true)}><LockOpen /> Reopen day</Button>
+            {t('Closed')} {formatDateTime(closed.closedAt)}{t('. Billing and expenses are locked.')}
+            <Button variant="outline" className="h-11" onClick={() => setConfirmReopen(true)}><LockOpen /> {t('Reopen day')}</Button>
           </AlertDescription>
         </Alert>
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>Summary</CardTitle><CardDescription>{summary.billsCount} bills · total sales {formatINR(summary.totalSales)}</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{t('Summary')}</CardTitle><CardDescription>{summary.billsCount} {t('bills · total sales')} {formatINR(summary.totalSales)}</CardDescription></CardHeader>
           <CardContent>
-            <Row label="Opening float" value={summary.openingFloat} />
-            <Row label="Cash sales" value={summary.cashSales} />
-            <Row label="Cash expenses" value={summary.cashExpenses} neg />
-            <Row label="Expected cash in drawer" value={summary.expectedCash} strong />
+            <Row label={t('Opening float')} value={summary.openingFloat} />
+            <Row label={t('Cash sales')} value={summary.cashSales} />
+            <Row label={t('Cash expenses')} value={summary.cashExpenses} neg />
+            <Row label={t('Expected cash in drawer')} value={summary.expectedCash} strong />
             <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
               <div className="rounded-lg bg-muted p-2"><div className="text-muted-foreground">UPI</div><div className="text-sm font-semibold tabular-nums">{formatINR(summary.upiSales)}</div></div>
-              <div className="rounded-lg bg-muted p-2"><div className="text-muted-foreground">Card</div><div className="text-sm font-semibold tabular-nums">{formatINR(summary.cardSales)}</div></div>
-              <div className="rounded-lg bg-muted p-2"><div className="text-muted-foreground">Wastage</div><div className="text-sm font-semibold tabular-nums">{formatINR(summary.wastageValue)}</div></div>
+              <div className="rounded-lg bg-muted p-2"><div className="text-muted-foreground">{t('Card')}</div><div className="text-sm font-semibold tabular-nums">{formatINR(summary.cardSales)}</div></div>
+              <div className="rounded-lg bg-muted p-2"><div className="text-muted-foreground">{t('Wastage')}</div><div className="text-sm font-semibold tabular-nums">{formatINR(summary.wastageValue)}</div></div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Petty expenses</CardTitle><CardDescription>Paid from the cash drawer today</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{t('Petty expenses')}</CardTitle><CardDescription>{t('Paid from the cash drawer today')}</CardDescription></CardHeader>
           <CardContent className="space-y-3">
             {!closed && (
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1.5">
-                  <Label>Category</Label>
+                  <Label>{t('Category')}</Label>
                   <Select value={cat} onValueChange={(v) => setCat(v as ExpenseCategory)}>
                     <SelectTrigger className="h-11 w-full"><SelectValue /></SelectTrigger>
-                    <SelectContent>{EXPENSE_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                    <SelectContent>{EXPENSE_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{t(c)}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="amt">Amount (₹)</Label>
+                  <Label htmlFor="amt">{t('Amount (₹)')}</Label>
                   <Input id="amt" inputMode="decimal" className="h-11" value={amount} placeholder="0" onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ''))} />
                 </div>
-                <Input className="col-span-2 h-11" placeholder="Note (optional)" value={expNote} onChange={(e) => setExpNote(e.target.value)} />
-                <Button className="col-span-2 h-11" disabled={!Number(amount)} onClick={addExpense}><Plus /> Add expense</Button>
+                <Input className="col-span-2 h-11" placeholder={t('Note (optional)')} value={expNote} onChange={(e) => setExpNote(e.target.value)} />
+                <Button className="col-span-2 h-11" disabled={!Number(amount)} onClick={addExpense}><Plus /> {t('Add expense')}</Button>
               </div>
             )}
-            {expenses.length === 0 ? <p className="text-sm text-muted-foreground">No expenses today.</p> : (
+            {expenses.length === 0 ? <p className="text-sm text-muted-foreground">{t('No expenses today.')}</p> : (
               <div className="divide-y">
                 {expenses.map((e) => (
                   <div key={e.id} className="flex items-center justify-between gap-2 py-2">
-                    <div className="min-w-0"><div className="text-sm font-medium">{e.category}</div>{e.note && <div className="truncate text-xs text-muted-foreground">{e.note}</div>}</div>
+                    <div className="min-w-0"><div className="text-sm font-medium">{t(e.category)}</div>{e.note && <div className="truncate text-xs text-muted-foreground">{e.note}</div>}</div>
                     <div className="flex items-center gap-1">
                       <span className="tabular-nums">{formatINR(e.amount, { decimals: true })}</span>
-                      {!closed && <Button variant="ghost" className="size-11 text-muted-foreground" aria-label="Delete expense" onClick={() => run(() => { dbActions.deleteExpense(e.id) }, 'Expense deleted')}><Trash2 /></Button>}
+                      {!closed && <Button variant="ghost" className="size-11 text-muted-foreground" aria-label={t('Delete expense')} onClick={() => run(t, () => { dbActions.deleteExpense(e.id) }, 'Expense deleted')}><Trash2 /></Button>}
                     </div>
                   </div>
                 ))}
@@ -129,30 +131,30 @@ export default function DayEndPage() {
         </Card>
 
         <Card className="lg:col-span-2">
-          <CardHeader><CardTitle>Cash count</CardTitle><CardDescription>{closed ? 'Recorded at close' : 'Count the drawer by denomination'}</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{t('Cash count')}</CardTitle><CardDescription>{closed ? t('Recorded at close') : t('Count the drawer by denomination')}</CardDescription></CardHeader>
           <CardContent className="grid gap-6 md:grid-cols-2">
             <div>
               {closed ? (
                 <div className="space-y-1 text-sm">
                   {Object.entries(closed.denominations ?? {}).filter(([, v]) => v > 0).map(([k, v]) => (
-                    <div key={k} className="flex justify-between"><span className="text-muted-foreground">{k === 'coins' ? 'Coins' : `₹${k} ×`}</span><span className="tabular-nums">{k === 'coins' ? formatINR(v) : v}</span></div>
+                    <div key={k} className="flex justify-between"><span className="text-muted-foreground">{k === 'coins' ? t('Coins') : `₹${k} ×`}</span><span className="tabular-nums">{k === 'coins' ? formatINR(v) : v}</span></div>
                   ))}
-                  {!closed.denominations && <p className="text-muted-foreground">No denomination breakdown recorded.</p>}
+                  {!closed.denominations && <p className="text-muted-foreground">{t('No denomination breakdown recorded.')}</p>}
                 </div>
               ) : <DenominationCounter value={denoms} onChange={setDenoms} />}
             </div>
             <div className="space-y-3">
-              <div className="flex items-center justify-between"><span className="text-muted-foreground">Counted cash</span><span className="font-heading text-2xl font-bold tabular-nums">{formatINR(counted, { decimals: true })}</span></div>
-              <div className="flex items-center justify-between"><span className="text-muted-foreground">Expected</span><span className="tabular-nums">{formatINR(summary.expectedCash, { decimals: true })}</span></div>
+              <div className="flex items-center justify-between"><span className="text-muted-foreground">{t('Counted cash')}</span><span className="font-heading text-2xl font-bold tabular-nums">{formatINR(counted, { decimals: true })}</span></div>
+              <div className="flex items-center justify-between"><span className="text-muted-foreground">{t('Expected')}</span><span className="tabular-nums">{formatINR(summary.expectedCash, { decimals: true })}</span></div>
               <div className={cn('flex items-center justify-between rounded-lg p-3 font-semibold', varianceTone(variance, threshold))}>
-                <span>{Math.abs(variance) < 0.5 ? 'Balanced' : variance > 0 ? 'Excess' : 'Short'}</span>
+                <span>{Math.abs(variance) < 0.5 ? t('Balanced') : variance > 0 ? t('Excess') : t('Short')}</span>
                 <span className="tabular-nums">{variance > 0 ? '+' : ''}{formatINR(variance, { decimals: true })}</span>
               </div>
               {closed ? (closed.notes && <p className="rounded-lg bg-muted p-3 text-sm">{closed.notes}</p>) : (
                 <>
-                  <Textarea placeholder="Notes (e.g. reason for variance)" value={notes} onChange={(e) => setNotes(e.target.value)} />
-                  {counted <= 0 && <p className="text-sm text-muted-foreground">Enter the cash count to close the day.</p>}
-                  <Button className="h-12 w-full text-base" disabled={counted <= 0} onClick={() => setConfirmClose(true)}><Lock /> Close day</Button>
+                  <Textarea placeholder={t('Notes (e.g. reason for variance)')} value={notes} onChange={(e) => setNotes(e.target.value)} />
+                  {counted <= 0 && <p className="text-sm text-muted-foreground">{t('Enter the cash count to close the day.')}</p>}
+                  <Button className="h-12 w-full text-base" disabled={counted <= 0} onClick={() => setConfirmClose(true)}><Lock /> {t('Close day')}</Button>
                 </>
               )}
             </div>
@@ -160,13 +162,13 @@ export default function DayEndPage() {
         </Card>
 
         <Card className="lg:col-span-2">
-          <CardHeader><CardTitle>Past closes</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{t('Past closes')}</CardTitle></CardHeader>
           <CardContent>
-            {pastCloses.length === 0 ? <p className="text-sm text-muted-foreground">No earlier closes.</p> : (
+            {pastCloses.length === 0 ? <p className="text-sm text-muted-foreground">{t('No earlier closes.')}</p> : (
               <div className="divide-y">
                 {pastCloses.map((d) => (
                   <div key={d.id} className="flex items-center justify-between gap-2 py-2.5 text-sm">
-                    <div><div className="font-medium">{formatDate(d.date)}</div><div className="text-xs text-muted-foreground">Cash sales {formatINR(d.cashSales)} · counted {formatINR(d.countedCash)}</div></div>
+                    <div><div className="font-medium">{formatDate(d.date)}</div><div className="text-xs text-muted-foreground">{t('Cash sales')} {formatINR(d.cashSales)} {t('· counted')} {formatINR(d.countedCash)}</div></div>
                     <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold tabular-nums', varianceTone(d.variance, threshold))}>{d.variance > 0 ? '+' : ''}{formatINR(d.variance)}</span>
                   </div>
                 ))}
@@ -176,10 +178,10 @@ export default function DayEndPage() {
         </Card>
       </div>
 
-      <ConfirmDialog open={confirmClose} onOpenChange={setConfirmClose} title="Close the day?"
-        description={`Expected ${formatINR(summary.expectedCash, { decimals: true })} · Counted ${formatINR(counted, { decimals: true })} · Variance ${variance > 0 ? '+' : ''}${formatINR(variance, { decimals: true })} (${Math.abs(variance) < 0.5 ? 'balanced' : variance > 0 ? 'excess' : 'short'}). POS and expenses will be locked.`}
-        confirmLabel="Close day" onConfirm={close} />
-      <ConfirmDialog open={confirmReopen} onOpenChange={setConfirmReopen} title="Reopen today?" description="The close record is removed and billing is enabled again. You will need to close the day again." confirmLabel="Reopen" onConfirm={reopen} />
+      <ConfirmDialog open={confirmClose} onOpenChange={setConfirmClose} title={t('Close the day?')}
+        description={t('Expected {expected} · Counted {counted} · Variance {sign}{variance} ({status}). POS and expenses will be locked.', { expected: formatINR(summary.expectedCash, { decimals: true }), counted: formatINR(counted, { decimals: true }), sign: variance > 0 ? '+' : '', variance: formatINR(variance, { decimals: true }), status: t(Math.abs(variance) < 0.5 ? 'balanced' : variance > 0 ? 'excess' : 'short') })}
+        confirmLabel={t('Close day')} onConfirm={close} />
+      <ConfirmDialog open={confirmReopen} onOpenChange={setConfirmReopen} title={t('Reopen today?')} description={t('The close record is removed and billing is enabled again. You will need to close the day again.')} confirmLabel={t('Reopen')} onConfirm={reopen} />
     </>
   )
 }

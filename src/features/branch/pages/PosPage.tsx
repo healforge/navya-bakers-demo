@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useEffect, useMemo, useState } from 'react'
 import { Lock, Search, ShoppingCart } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -21,6 +22,7 @@ import { ReceiptDialog } from '../components/ReceiptDialog'
 import { run } from '../lib/utils'
 
 export default function PosPage() {
+  const { t } = useLanguage()
   const branch = useCurrentBranch()
   const user = useRequireUser()
   const db = useDb((d) => d)
@@ -68,7 +70,7 @@ export default function PosPage() {
 
   const pay = (mode: PaymentMode, tendered?: number): boolean => {
     let created: Bill | null = null
-    const ok = run(() => {
+    const ok = run(t, () => {
       created = dbActions.createBill({ branchId: branch.id, cashierId: user.id, lines: lines.map((l) => ({ productId: l.productId, qty: l.qty })), paymentMode: mode, tendered })
     })
     if (ok && created) { setBill(created); setCart({}); setCartOpen(false) }
@@ -81,30 +83,30 @@ export default function PosPage() {
 
   return (
     <>
-      <PageHeader title="POS" description={`${branch.name} · billing`} />
+      <PageHeader title={t('POS')} description={t('{name} · billing', { name: branch.name })} />
       {closed && (
         <Alert variant="destructive" className="mb-4">
           <Lock />
-          <AlertTitle>Day is closed</AlertTitle>
-          <AlertDescription>Billing is disabled for today. Reopen the day from Day end to continue.</AlertDescription>
+          <AlertTitle>{t('Day is closed')}</AlertTitle>
+          <AlertDescription>{t('Billing is disabled for today. Reopen the day from Day end to continue.')}</AlertDescription>
         </Alert>
       )}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="min-w-0 pb-24 lg:pb-0">
           <div className="relative mb-3">
             <Search className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground" />
-            <Input className="h-12 pl-10 text-base" placeholder="Search products…" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input className="h-12 pl-10 text-base" placeholder={t('Search products…')} value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           <div className="-mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1">
             {categories.map((c) => (
               <button key={c} type="button" onClick={() => setCategory(c)}
                 className={cn('h-11 shrink-0 rounded-full border px-4 text-sm font-medium transition', category === c ? 'border-primary bg-primary text-primary-foreground' : 'bg-card hover:bg-muted')}>
-                {c}
+                {t(c)}
               </button>
             ))}
           </div>
           {visible.length === 0 ? (
-            <EmptyState title="No products found" description="Try a different category or search." />
+            <EmptyState title={t('No products found')} description={t('Try a different category or search.')} />
           ) : (
             <div className={cn('grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3', closed && 'pointer-events-none opacity-60')}>
               {visible.map((s) => (
@@ -131,13 +133,13 @@ export default function PosPage() {
       {/* phone: fixed above the bottom tab bar; tablet: sticky within the content column so it never sits under the sidebar */}
       <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 p-3 md:sticky md:inset-x-auto md:bottom-0 md:-mx-3 lg:hidden">
         <Button className="h-14 w-full justify-between text-base shadow-lg disabled:border disabled:bg-card disabled:text-muted-foreground disabled:opacity-100" disabled={lines.length === 0} onClick={() => setCartOpen(true)}>
-          <span className="flex items-center gap-2"><ShoppingCart /> {units} item{units === 1 ? '' : 's'}</span>
-          <span className="tabular-nums">{formatINR(total)} · View cart</span>
+          <span className="flex items-center gap-2"><ShoppingCart /> {t(units === 1 ? '{count} item' : '{count} items', { count: units })}</span>
+          <span className="tabular-nums">{formatINR(total)} {t('· View cart')}</span>
         </Button>
       </div>
       <Drawer open={cartOpen} onOpenChange={setCartOpen}>
         <DrawerContent className="max-h-[88dvh]">
-          <DrawerHeader className="sr-only"><DrawerTitle>Cart</DrawerTitle><DrawerDescription>Current bill</DrawerDescription></DrawerHeader>
+          <DrawerHeader className="sr-only"><DrawerTitle>{t('Cart')}</DrawerTitle><DrawerDescription>{t('Current bill')}</DrawerDescription></DrawerHeader>
           <div className="h-[75dvh] p-4">{cartPanel}</div>
         </DrawerContent>
       </Drawer>

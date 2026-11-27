@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { Plus, Save, X } from 'lucide-react'
@@ -15,15 +16,17 @@ import { FormRow, marginTone, run } from '../components/shared'
 interface Row { rawMaterialId: string; qty: string }
 
 export default function RecipeDetailPage() {
+  const { t } = useLanguage()
   const { productId = '' } = useParams()
   const db = useDb((d) => d)
   const product = db.products.find((p) => p.id === productId)
   const recipe = db.recipes.find((r) => r.productId === productId)
-  if (!product) return <EmptyState title="Product not found" action={<Button asChild variant="outline"><Link to="/ho/recipes">Back</Link></Button>} />
+  if (!product) return <EmptyState title={t('Product not found')} action={<Button asChild variant="outline"><Link to="/ho/recipes">{t('Back')}</Link></Button>} />
   return <Editor key={productId + (recipe ? 'r' : 'n')} productId={productId} initial={recipe ? { yieldQty: String(recipe.yieldQty), rows: recipe.ingredients.map((i) => ({ rawMaterialId: i.rawMaterialId, qty: String(i.qty) })) } : { yieldQty: '', rows: [] }} />
 }
 
 function Editor({ productId, initial }: { productId: string; initial: { yieldQty: string; rows: Row[] } }) {
+  const { t } = useLanguage()
   const db = useDb((d) => d)
   const nav = useNavigate()
   const product = db.products.find((p) => p.id === productId)!
@@ -41,39 +44,39 @@ function Editor({ productId, initial }: { productId: string; initial: { yieldQty
   const set = (i: number, qty: string) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, qty } : r)))
 
   const save = async () => {
-    if (await run(() => dbActions.upsertRecipe({ productId, yieldQty: y, ingredients: rows.map((r) => ({ rawMaterialId: r.rawMaterialId, qty: Number(r.qty) })) }), 'Recipe saved')) nav('/ho/recipes')
+    if (await run(t, () => dbActions.upsertRecipe({ productId, yieldQty: y, ingredients: rows.map((r) => ({ rawMaterialId: r.rawMaterialId, qty: Number(r.qty) })) }), 'Recipe saved')) nav('/ho/recipes')
   }
 
   return (
     <>
-      <PageHeader title={`Recipe · ${product.name}`} description={`${product.category} · MRP ₹${product.price} · GST ${product.gstRate}%`} actions={<><Button variant="outline" asChild><Link to="/ho/recipes">Back</Link></Button><Button onClick={save}><Save />Save recipe</Button></>} />
+      <PageHeader title={t('Recipe · {product}', { product: product.name })} description={t('{category} · MRP ₹{price} · GST {tax}%', { category: t(product.category), price: product.price, tax: product.gstRate })} actions={<><Button variant="outline" asChild><Link to="/ho/recipes">{t('Back')}</Link></Button><Button onClick={save}><Save />{t('Save recipe')}</Button></>} />
       <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
         <Card>
-          <CardHeader><CardTitle>Ingredients per batch</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{t('Ingredients per batch')}</CardTitle></CardHeader>
           <CardContent className="space-y-4 p-0">
-            <div className="px-4"><FormRow label="Yield (units per batch)" className="w-48"><Input type="number" min={1} step={1} value={yieldQty} onChange={(e) => setYield(e.target.value)} /></FormRow></div>
+            <div className="px-4"><FormRow label={t('Yield (units per batch)')} className="w-48"><Input type="number" min={1} step={1} value={yieldQty} onChange={(e) => setYield(e.target.value)} /></FormRow></div>
             <Table>
-              <TableHeader><TableRow><TableHead>Ingredient</TableHead><TableHead className="text-right">Qty</TableHead><TableHead>Unit</TableHead><TableHead className="text-right">Cost</TableHead><TableHead /></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>{t('Ingredient')}</TableHead><TableHead className="text-right">{t('Qty')}</TableHead><TableHead>{t('Unit')}</TableHead><TableHead className="text-right">{t('Cost')}</TableHead><TableHead /></TableRow></TableHeader>
               <TableBody>
                 {rows.map((r, i) => {
                   const m = rm.get(r.rawMaterialId)
                   return (
                     <TableRow key={r.rawMaterialId}>
                       <TableCell className="font-medium">{m?.name}</TableCell>
-                      <TableCell className="text-right"><Input type="number" min={0} step="any" aria-label={`${m?.name} quantity`} className="ml-auto h-8 w-24 text-right" value={r.qty} onChange={(e) => set(i, e.target.value)} /></TableCell>
+                      <TableCell className="text-right"><Input type="number" min={0} step="any" aria-label={t('{product} quantity', { product: m?.name ?? '' })} className="ml-auto h-8 w-24 text-right" value={r.qty} onChange={(e) => set(i, e.target.value)} /></TableCell>
                       <TableCell>{m?.unit}</TableCell>
                       <TableCell className="text-right"><Money value={(Number(r.qty) || 0) * (m?.costPerUnit ?? 0)} decimals /></TableCell>
-                      <TableCell><Button variant="ghost" size="icon" aria-label="Remove ingredient" onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}><X /></Button></TableCell>
+                      <TableCell><Button variant="ghost" size="icon" aria-label={t('Remove ingredient')} onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}><X /></Button></TableCell>
                     </TableRow>
                   )
                 })}
-                {rows.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">No ingredients yet</TableCell></TableRow>}
+                {rows.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">{t('No ingredients yet')}</TableCell></TableRow>}
               </TableBody>
-              <TableFooter><TableRow><TableCell colSpan={3} className="text-right">Batch cost</TableCell><TableCell className="text-right"><Money value={batchCost} decimals /></TableCell><TableCell /></TableRow></TableFooter>
+              <TableFooter><TableRow><TableCell colSpan={3} className="text-right">{t('Batch cost')}</TableCell><TableCell className="text-right"><Money value={batchCost} decimals /></TableCell><TableCell /></TableRow></TableFooter>
             </Table>
             <div className="flex items-center gap-2 px-4 pb-4">
               <Select value={adding} onValueChange={(v) => { setRows((rs) => [...rs, { rawMaterialId: v, qty: '' }]); setAdding('') }}>
-                <SelectTrigger className="w-64"><SelectValue placeholder="Add ingredient…" /></SelectTrigger>
+                <SelectTrigger className="w-64"><SelectValue placeholder={t('Add ingredient…')} /></SelectTrigger>
                 <SelectContent>{options.map((m) => <SelectItem key={m.id} value={m.id}>{m.name} ({m.unit})</SelectItem>)}</SelectContent>
               </Select>
               <Plus className="size-4 text-muted-foreground" />
@@ -82,13 +85,13 @@ function Editor({ productId, initial }: { productId: string; initial: { yieldQty
         </Card>
 
         <Card className="h-fit">
-          <CardHeader><CardTitle>Live costing</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{t('Live costing')}</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">Unit cost</span><Money value={unit} decimals className="font-semibold" /></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">{t('Unit cost')}</span><Money value={unit} decimals className="font-semibold" /></div>
             <div className="flex justify-between"><span className="text-muted-foreground">MRP</span><Money value={product.price} decimals /></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Net price (ex-GST)</span><Money value={net} decimals /></div>
-            <div className="flex justify-between border-t pt-3"><span className="text-muted-foreground">Gross margin</span>{margin === null ? '—' : <span className={`text-lg font-semibold ${marginTone(margin)}`}>{formatPct(margin)}</span>}</div>
-            {margin !== null && <div className="flex justify-between"><span className="text-muted-foreground">Margin per unit</span><Money value={net - unit} decimals /></div>}
+            <div className="flex justify-between"><span className="text-muted-foreground">{t('Net price (ex-GST)')}</span><Money value={net} decimals /></div>
+            <div className="flex justify-between border-t pt-3"><span className="text-muted-foreground">{t('Gross margin')}</span>{margin === null ? '—' : <span className={`text-lg font-semibold ${marginTone(margin)}`}>{formatPct(margin)}</span>}</div>
+            {margin !== null && <div className="flex justify-between"><span className="text-muted-foreground">{t('Margin per unit')}</span><Money value={net - unit} decimals /></div>}
           </CardContent>
         </Card>
       </div>

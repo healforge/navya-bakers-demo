@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { Input } from '@/components/ui/input'
 import { formatINR } from '@/lib/format'
 import { Stepper } from './Stepper'
@@ -11,6 +12,7 @@ export const denomTotal = (d: Denoms) => NOTES.reduce((s, n) => s + n * (d.count
 export const denomRecord = (d: Denoms): Record<string, number> => ({ ...d.counts, coins: d.coins })
 
 export function DenominationCounter({ value, onChange, disabled }: { value: Denoms; onChange: (d: Denoms) => void; disabled?: boolean }) {
+  const { t } = useLanguage()
   return (
     <div className="space-y-2">
       {NOTES.map((n) => {
@@ -24,7 +26,7 @@ export function DenominationCounter({ value, onChange, disabled }: { value: Deno
         )
       })}
       <div className="flex items-center justify-between gap-2">
-        <div className="w-24 text-sm font-medium">Coins (₹)</div>
+        <div className="w-24 text-sm font-medium">{t('Coins (₹)')}</div>
         <Input inputMode="numeric" className="h-11 w-[8.25rem] text-center text-base font-semibold" disabled={disabled} value={value.coins || ''} placeholder="0"
           onChange={(e) => onChange({ ...value, coins: Number(e.target.value.replace(/\D/g, '')) || 0 })} />
         <div className="w-20 text-right text-sm tabular-nums text-muted-foreground">{formatINR(value.coins)}</div>

@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { Link } from 'react-router'
 import { AlertTriangle, Info, OctagonAlert } from 'lucide-react'
 import { StatusBadge } from '@/components/common/StatusBadge'
@@ -15,6 +16,7 @@ const ICON = { critical: OctagonAlert, warning: AlertTriangle, info: Info }
 const TONE = { critical: 'text-danger', warning: 'text-warning-foreground dark:text-warning', info: 'text-chart-4' }
 
 export function AlertCard({ alert, branchName, compact = false }: { alert: Alert; branchName?: string; compact?: boolean }) {
+  const { t } = useLanguage()
   const Icon = ICON[alert.severity]
   const link = cxoAlertLink(alert)
   const hoOnly = !!alert.link && !alert.link.startsWith('/cxo')
@@ -29,7 +31,7 @@ export function AlertCard({ alert, branchName, compact = false }: { alert: Alert
         {!compact && <p className="text-sm text-muted-foreground">{alert.detail}</p>}
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           {branchName && <span>{branchName}</span>}
-          {(hoOnly || !link) && <span className="rounded bg-muted px-1.5 py-0.5">Handled by HO</span>}
+          {(hoOnly || !link) && <span className="rounded bg-muted px-1.5 py-0.5">{t('Handled by HO')}</span>}
         </div>
       </div>
     </div>

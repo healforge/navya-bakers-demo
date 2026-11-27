@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { Fragment, useMemo, useState } from 'react'
 import { ChevronDown, ChevronRight, PackageSearch, Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -18,6 +19,7 @@ const FILTERS: { value: Filter; label: string }[] = [
 ]
 
 export default function StockPage() {
+  const { t } = useLanguage()
   const branch = useCurrentBranch()
   const db = useDb((d) => d)
   const today = todayISO()
@@ -44,21 +46,21 @@ export default function StockPage() {
 
   return (
     <>
-      <PageHeader title="Stock" description={`${branch.name} · on-hand by product (FIFO batches)`} />
+      <PageHeader title={t('Stock')} description={t('{name} · on-hand by product (FIFO batches)', { name: branch.name })} />
       <div className="relative mb-3">
         <Search className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground" />
-        <Input className="h-12 pl-10 text-base" placeholder="Search products…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <Input className="h-12 pl-10 text-base" placeholder={t('Search products…')} value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
       <div className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1">
         {FILTERS.map((f) => (
           <button key={f.value} type="button" onClick={() => setFilter(f.value)}
             className={cn('h-11 shrink-0 rounded-full border px-4 text-sm font-medium', filter === f.value ? 'border-primary bg-primary text-primary-foreground' : 'bg-card hover:bg-muted')}>
-            {f.label} <span className="opacity-70">({counts[f.value]})</span>
+            {t(f.label)} <span className="opacity-70">({counts[f.value]})</span>
           </button>
         ))}
       </div>
       {rows.length === 0 ? (
-        <EmptyState icon={PackageSearch} title="Nothing matches" description="Try another filter or search term." />
+        <EmptyState icon={PackageSearch} title={t('Nothing matches')} description={t('Try another filter or search term.')} />
       ) : (
         <Card>
           <CardContent className="p-0">
@@ -75,19 +77,19 @@ export default function StockPage() {
                         <div className="mt-0.5 flex flex-wrap gap-1">
                           {s.onHand === 0 && <StatusBadge status="out" />}
                           {s.onHand > 0 && s.onHand <= 5 && <StatusBadge status="low" />}
-                          {s.expiringQty > 0 && <StatusBadge status="expiring" label={`${s.expiringQty} expiring`} />}
-                          {s.expiredQty > 0 && <StatusBadge status="expired" label={`${s.expiredQty} expired`} />}
+                          {s.expiringQty > 0 && <StatusBadge status="expiring" label={t('{count} expiring', { count: s.expiringQty })} />}
+                          {s.expiredQty > 0 && <StatusBadge status="expired" label={t('{count} expired', { count: s.expiredQty })} />}
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="font-heading text-xl font-semibold tabular-nums">{formatNumber(s.onHand)}</div>
-                        <div className="text-xs text-muted-foreground">on hand</div>
+                        <div className="text-xs text-muted-foreground">{t('on hand')}</div>
                       </div>
                     </button>
                     {isOpen && (
                       <div className="bg-muted/40 px-4 py-2">
                         <table className="w-full text-sm">
-                          <thead><tr className="text-left text-xs text-muted-foreground"><th className="py-1 font-medium">Mfg</th><th className="font-medium">Expiry</th><th className="text-right font-medium">Qty</th></tr></thead>
+                          <thead><tr className="text-left text-xs text-muted-foreground"><th className="py-1 font-medium">{t('Mfg')}</th><th className="font-medium">{t('Expiry')}</th><th className="text-right font-medium">{t('Qty')}</th></tr></thead>
                           <tbody>
                             {s.batches.map((b) => {
                               const left = diffDays(today, b.expiryDate)
@@ -96,7 +98,7 @@ export default function StockPage() {
                                   <td className="py-1.5">{formatDate(b.mfgDate)}</td>
                                   <td>
                                     {formatDate(b.expiryDate)}{' '}
-                                    {left < 0 ? <StatusBadge status="expired" /> : left === 0 ? <StatusBadge status="expiring" label="Today" /> : <span className="text-xs text-muted-foreground">({left}d)</span>}
+                                    {left < 0 ? <StatusBadge status="expired" /> : left === 0 ? <StatusBadge status="expiring" label={t('Today')} /> : <span className="text-xs text-muted-foreground">({t('{count}d', { count: left })})</span>}
                                   </td>
                                   <td className="text-right tabular-nums">{b.qtyRemaining}</td>
                                 </tr>

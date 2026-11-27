@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { IndentStatus } from '@/types/domain'
@@ -8,6 +9,7 @@ const STEPS: { key: IndentStatus; label: string }[] = [
 ]
 
 export function IndentTimeline({ status }: { status: IndentStatus | null }) {
+  const { t } = useLanguage()
   const idx = status ? STEPS.findIndex((s) => s.key === status) : -1
   return (
     <ol className="flex items-start">
@@ -23,7 +25,7 @@ export function IndentTimeline({ status }: { status: IndentStatus | null }) {
               </div>
               <div className={cn('h-0.5 flex-1', i === STEPS.length - 1 ? 'bg-transparent' : i < idx ? 'bg-primary' : 'bg-border')} />
             </div>
-            <span className={cn('text-[11px] leading-tight sm:text-xs', current ? 'font-semibold' : 'text-muted-foreground')}>{s.label}</span>
+            <span className={cn('text-[11px] leading-tight sm:text-xs', current ? 'font-semibold' : 'text-muted-foreground')}>{t(s.label)}</span>
           </li>
         )
       })}

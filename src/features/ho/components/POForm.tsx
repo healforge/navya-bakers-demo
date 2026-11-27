@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { Plus, X } from 'lucide-react'
@@ -16,6 +17,7 @@ interface Line { rawMaterialId: string; qty: string; rate: string }
 
 /** Create / edit (draft) purchase order. */
 export function POForm({ poId }: { poId?: string }) {
+  const { t } = useLanguage()
   const db = useDb((d) => d)
   const nav = useNavigate()
   const loc = useLocation()
@@ -43,13 +45,13 @@ export function POForm({ poId }: { poId?: string }) {
   const total = round2(lines.reduce((s, l) => s + num(l.qty) * num(l.rate), 0))
   const set = (i: number, patch: Partial<Line>) => setLines((ls) => ls.map((l, j) => (j === i ? { ...l, ...patch } : l)))
 
-  if (poId && !po) return <p className="text-muted-foreground">Purchase order not found.</p>
-  if (po && po.status !== 'draft') return <p className="text-muted-foreground">Only draft purchase orders can be edited.</p>
+  if (poId && !po) return <p className="text-muted-foreground">{t('Purchase order not found.')}</p>
+  if (po && po.status !== 'draft') return <p className="text-muted-foreground">{t('Only draft purchase orders can be edited.')}</p>
 
   const save = async (send: boolean) => {
     const input = { supplierId, expectedDate: expected, note: note.trim() || undefined, lines: lines.map((l) => ({ rawMaterialId: l.rawMaterialId, qty: num(l.qty), rate: num(l.rate) })) }
     let id = poId ?? ''
-    const ok = await run(() => {
+    const ok = await run(t, () => {
       if (poId) dbActions.updatePO(poId, input)
       else id = dbActions.createPO(input)
       if (send) dbActions.sendPO(id)
@@ -61,38 +63,38 @@ export function POForm({ poId }: { poId?: string }) {
     <div className="space-y-4">
       <Card>
         <CardContent className="grid gap-4 sm:grid-cols-3">
-          <FormRow label="Supplier">
+          <FormRow label={t('Supplier')}>
             <Select value={supplierId} onValueChange={setSupplierId}>
-              <SelectTrigger className="w-full"><SelectValue placeholder="Choose supplier" /></SelectTrigger>
+              <SelectTrigger className="w-full"><SelectValue placeholder={t('Choose supplier')} /></SelectTrigger>
               <SelectContent>{suppliers.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
             </Select>
           </FormRow>
-          <FormRow label="Expected delivery"><Input type="date" value={expected} onChange={(e) => setExpected(e.target.value)} /></FormRow>
-          <FormRow label="Note"><Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" /></FormRow>
+          <FormRow label={t('Expected delivery')}><Input type="date" value={expected} onChange={(e) => setExpected(e.target.value)} /></FormRow>
+          <FormRow label={t('Note')}><Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('Optional')} /></FormRow>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Items</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t('Items')}</CardTitle></CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader><TableRow><TableHead>Material</TableHead><TableHead className="text-right">Qty</TableHead><TableHead className="text-right">Rate (₹)</TableHead><TableHead className="text-right">Line total</TableHead><TableHead /></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>{t('Material')}</TableHead><TableHead className="text-right">{t('Qty')}</TableHead><TableHead className="text-right">{t('Rate (₹)')}</TableHead><TableHead className="text-right">{t('Line total')}</TableHead><TableHead /></TableRow></TableHeader>
             <TableBody>
               {lines.map((l, i) => {
                 const m = rm.get(l.rawMaterialId)
                 return (
                   <TableRow key={l.rawMaterialId}>
-                    <TableCell className="font-medium">{m?.name} <span className="text-muted-foreground">({m?.unit}, stock {formatQty(m?.stockQty ?? 0)})</span></TableCell>
-                    <TableCell className="text-right"><Input type="number" min={0} step="any" aria-label="Quantity" className="ml-auto h-8 w-24 text-right" value={l.qty} onChange={(e) => set(i, { qty: e.target.value })} /></TableCell>
-                    <TableCell className="text-right"><Input type="number" min={0} step="any" aria-label="Rate" className="ml-auto h-8 w-24 text-right" value={l.rate} onChange={(e) => set(i, { rate: e.target.value })} /></TableCell>
+                    <TableCell className="font-medium">{m?.name} <span className="text-muted-foreground">({m?.unit}{t(', stock')} {formatQty(m?.stockQty ?? 0)})</span></TableCell>
+                    <TableCell className="text-right"><Input type="number" min={0} step="any" aria-label={t('Quantity')} className="ml-auto h-8 w-24 text-right" value={l.qty} onChange={(e) => set(i, { qty: e.target.value })} /></TableCell>
+                    <TableCell className="text-right"><Input type="number" min={0} step="any" aria-label={t('Rate')} className="ml-auto h-8 w-24 text-right" value={l.rate} onChange={(e) => set(i, { rate: e.target.value })} /></TableCell>
                     <TableCell className="text-right"><Money value={num(l.qty) * num(l.rate)} decimals /></TableCell>
-                    <TableCell><Button variant="ghost" size="icon" aria-label="Remove" onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}><X /></Button></TableCell>
+                    <TableCell><Button variant="ghost" size="icon" aria-label={t('Remove')} onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}><X /></Button></TableCell>
                   </TableRow>
                 )
               })}
-              {lines.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">No items yet</TableCell></TableRow>}
+              {lines.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">{t('No items yet')}</TableCell></TableRow>}
             </TableBody>
-            <TableFooter><TableRow><TableCell colSpan={3} className="text-right">Grand total</TableCell><TableCell className="text-right"><Money value={total} decimals /></TableCell><TableCell /></TableRow></TableFooter>
+            <TableFooter><TableRow><TableCell colSpan={3} className="text-right">{t('Grand total')}</TableCell><TableCell className="text-right"><Money value={total} decimals /></TableCell><TableCell /></TableRow></TableFooter>
           </Table>
           <div className="flex items-center gap-2 p-3">
             <Select value={adding} onValueChange={(v) => {
@@ -100,7 +102,7 @@ export function POForm({ poId }: { poId?: string }) {
               if (m) setLines((ls) => [...ls, { rawMaterialId: m.id, qty: String(m.reorderQty || 1), rate: String(m.costPerUnit) }])
               setAdding('')
             }}>
-              <SelectTrigger className="w-64"><SelectValue placeholder="Add material…" /></SelectTrigger>
+              <SelectTrigger className="w-64"><SelectValue placeholder={t('Add material…')} /></SelectTrigger>
               <SelectContent>{options.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent>
             </Select>
             <Plus className="size-4 text-muted-foreground" />
@@ -109,9 +111,9 @@ export function POForm({ poId }: { poId?: string }) {
       </Card>
 
       <div className="flex gap-2">
-        <Button variant="outline" onClick={() => nav(-1)}>Cancel</Button>
-        <Button variant="outline" onClick={() => save(false)}>Save draft</Button>
-        <Button onClick={() => save(true)}>Save &amp; send</Button>
+        <Button variant="outline" onClick={() => nav(-1)}>{t('Cancel')}</Button>
+        <Button variant="outline" onClick={() => save(false)}>{t('Save draft')}</Button>
+        <Button onClick={() => save(true)}>{t('Save & send')}</Button>
       </div>
     </div>
   )

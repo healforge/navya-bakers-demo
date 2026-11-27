@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -13,6 +14,7 @@ import type { ProductionPlan } from '@/types/domain'
 import { run } from '../components/shared'
 
 export default function ProductionListPage() {
+  const { t } = useLanguage()
   const plans = useDb((d) => d.productionPlans)
   const nav = useNavigate()
   const [date, setDate] = useState(addDaysISO(todayISO(), 1))
@@ -31,23 +33,23 @@ export default function ProductionListPage() {
 
   const generate = async () => {
     let id = ''
-    if (await run(() => { id = dbActions.generateProductionPlan(date) }, existing ? 'Plan re-consolidated' : 'Production plan generated')) nav(`/ho/production/${id}`)
+    if (await run(t, () => { id = dbActions.generateProductionPlan(date) }, existing ? 'Plan re-consolidated' : 'Production plan generated')) nav(`/ho/production/${id}`)
   }
 
   return (
     <>
-      <PageHeader title="Production" description="Consolidate submitted indents into a production plan." />
+      <PageHeader title={t('Production')} description={t('Consolidate submitted indents into a production plan.')} />
       <Card className="mb-4">
         <CardContent className="flex flex-wrap items-end gap-3">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium" htmlFor="plan-date">Plan for delivery date</label>
+            <label className="text-sm font-medium" htmlFor="plan-date">{t('Plan for delivery date')}</label>
             <Input id="plan-date" type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} className="w-44" />
           </div>
-          <Button onClick={generate}><Factory />{existing?.status === 'draft' ? 'Re-generate plan' : 'Generate plan'}</Button>
-          {existing && <Button variant="outline" onClick={() => nav(`/ho/production/${existing.id}`)}>Open {existing.number}</Button>}
+          <Button onClick={generate}><Factory />{existing?.status === 'draft' ? t('Re-generate plan') : t('Generate plan')}</Button>
+          {existing && <Button variant="outline" onClick={() => nav(`/ho/production/${existing.id}`)}>{t('Open')} {existing.number}</Button>}
         </CardContent>
       </Card>
-      <DataTable columns={columns} data={rows} getRowId={(p) => p.id} onRowClick={(p) => nav(`/ho/production/${p.id}`)} searchPlaceholder="Search plans…" pageSize={15} emptyTitle="No production plans yet" />
+      <DataTable columns={columns} data={rows} getRowId={(p) => p.id} onRowClick={(p) => nav(`/ho/production/${p.id}`)} searchPlaceholder={t('Search plans…')} pageSize={15} emptyTitle={t('No production plans yet')} />
     </>
   )
 }

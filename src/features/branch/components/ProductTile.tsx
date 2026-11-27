@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { Badge } from '@/components/ui/badge'
 import { formatINR } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -10,6 +11,7 @@ export function ProductTile({ name, price, onHand, expiringToday, inCart, onAdd 
   inCart: number
   onAdd: () => void
 }) {
+  const { t } = useLanguage()
   const out = onHand <= 0
   const maxed = inCart >= onHand
   return (
@@ -32,10 +34,10 @@ export function ProductTile({ name, price, onHand, expiringToday, inCart, onAdd 
       <div className="mt-2 flex flex-wrap items-end justify-between gap-x-2 gap-y-1">
         <span className="font-heading text-base font-semibold tabular-nums">{formatINR(price)}</span>
         {out ? (
-          <Badge variant="outline" className="max-w-full border-transparent bg-danger/15 text-danger">Out</Badge>
+          <Badge variant="outline" className="max-w-full border-transparent bg-danger/15 text-danger">{t('Out')}</Badge>
         ) : (
           <Badge variant="outline" className={cn('max-w-full border-transparent', expiringToday ? 'bg-warning/30 text-warning-foreground dark:text-warning' : 'bg-muted text-muted-foreground')}>
-            {expiringToday ? `Exp · ${onHand}` : onHand}
+            {expiringToday ? t('Exp · {count}', { count: onHand }) : onHand}
           </Badge>
         )}
       </div>

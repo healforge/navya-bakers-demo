@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useState, type ReactNode } from 'react'
 import {
   flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable,
@@ -31,6 +32,7 @@ export interface DataTableProps<T> {
 export function DataTable<T>({
   columns, data, searchable = true, searchPlaceholder = 'Search…', pageSize, initialSorting = [], onRowClick, getRowId, emptyTitle = 'Nothing to show', toolbar, className,
 }: DataTableProps<T>) {
+  const { t } = useLanguage()
   const [sorting, setSorting] = useState<SortingState>(initialSorting)
   const [globalFilter, setGlobalFilter] = useState('')
   const table = useReactTable({
@@ -49,7 +51,7 @@ export function DataTable<T>({
     <div className={cn('space-y-3', className)}>
       {(searchable || toolbar) && (
         <div className="flex flex-wrap items-center gap-2">
-          {searchable && <Input value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} placeholder={searchPlaceholder} className="max-w-xs" />}
+          {searchable && <Input value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} placeholder={t(searchPlaceholder)} className="max-w-xs" />}
           {toolbar}
         </div>
       )}
@@ -61,14 +63,16 @@ export function DataTable<T>({
                 {hg.headers.map((h) => {
                   const canSort = h.column.getCanSort()
                   const dir = h.column.getIsSorted()
+                  const header = h.column.columnDef.header
+                  const label = typeof header === 'string' ? t(header) : flexRender(header, h.getContext())
                   return (
                     <TableHead key={h.id}>
                       {h.isPlaceholder ? null : canSort ? (
                         <button type="button" className="inline-flex items-center gap-1 font-medium" onClick={h.column.getToggleSortingHandler()}>
-                          {flexRender(h.column.columnDef.header, h.getContext())}
+                          {label}
                           {dir === 'asc' ? <ArrowUp className="size-3" /> : dir === 'desc' ? <ArrowDown className="size-3" /> : <ArrowUpDown className="size-3 opacity-40" />}
                         </button>
-                      ) : flexRender(h.column.columnDef.header, h.getContext())}
+                      ) : label}
                     </TableHead>
                   )
                 })}
@@ -83,13 +87,13 @@ export function DataTable<T>({
             ))}
           </TableBody>
         </Table>
-        {rows.length === 0 && <EmptyState title={emptyTitle} className="m-3 border-0" />}
+        {rows.length === 0 && <EmptyState title={t(emptyTitle)} className="m-3 border-0" />}
       </div>
       {pageSize && table.getPageCount() > 1 && (
         <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
-          <span>Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}</span>
-          <Button variant="outline" size="sm" disabled={!table.getCanPreviousPage()} onClick={() => table.previousPage()}>Previous</Button>
-          <Button variant="outline" size="sm" disabled={!table.getCanNextPage()} onClick={() => table.nextPage()}>Next</Button>
+          <span>{t('Page {page} of {total}', { page: table.getState().pagination.pageIndex + 1, total: table.getPageCount() })}</span>
+          <Button variant="outline" size="sm" disabled={!table.getCanPreviousPage()} onClick={() => table.previousPage()}>{t('Previous')}</Button>
+          <Button variant="outline" size="sm" disabled={!table.getCanNextPage()} onClick={() => table.nextPage()}>{t('Next')}</Button>
         </div>
       )}
     </div>

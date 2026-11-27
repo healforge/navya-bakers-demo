@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { Factory } from 'lucide-react'
@@ -22,6 +23,7 @@ function statusKey(i: Indent | undefined): string {
 }
 
 export default function IndentsPage() {
+  const { t } = useLanguage()
   const db = useDb((d) => d)
   const [date, setDate] = useState(addDaysISO(todayISO(), 1))
   const [openId, setOpenId] = useState<string | null>(null)
@@ -52,25 +54,25 @@ export default function IndentsPage() {
   return (
     <>
       <PageHeader
-        title="Indents"
-        description="Branch requests by delivery date — submitted indents flow straight into production."
+        title={t('Indents')}
+        description={t('Branch requests by delivery date — submitted indents flow straight into production.')}
         actions={
           <>
             <Input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} className="w-40" />
-            <Button variant="outline" onClick={() => setDate(addDaysISO(todayISO(), 1))}>Tomorrow</Button>
+            <Button variant="outline" onClick={() => setDate(addDaysISO(todayISO(), 1))}>{t('Tomorrow')}</Button>
             <Button asChild>
-              <Link to={data.plan ? `/ho/production/${data.plan.id}` : '/ho/production'}><Factory />{data.plan ? `Open plan ${data.plan.number}` : 'Go to production'}</Link>
+              <Link to={data.plan ? `/ho/production/${data.plan.id}` : '/ho/production'}><Factory />{data.plan ? t('Open plan {number}', { number: data.plan.number }) : t('Go to production')}</Link>
             </Button>
           </>
         }
       />
-      <p className="mb-3 text-sm text-muted-foreground">Delivery date: {formatDate(date)}</p>
+      <p className="mb-3 text-sm text-muted-foreground">{t('Delivery date:')} {formatDate(date)}</p>
 
       <Card className="mb-4">
-        <CardHeader><CardTitle>Branch status</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t('Branch status')}</CardTitle></CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader><TableRow><TableHead>Branch</TableHead><TableHead>Status</TableHead><TableHead>Indent</TableHead><TableHead className="text-right">Units</TableHead><TableHead>Submitted</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>{t('Branch')}</TableHead><TableHead>{t('Status')}</TableHead><TableHead>{t('Indent')}</TableHead><TableHead className="text-right">{t('Units')}</TableHead><TableHead>{t('Submitted')}</TableHead></TableRow></TableHeader>
             <TableBody>
               {data.branches.map((b) => {
                 const i = data.byBranch.get(b.id)
@@ -92,18 +94,18 @@ export default function IndentsPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Consolidated matrix (submitted indents)</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t('Consolidated matrix (submitted indents)')}</CardTitle></CardHeader>
         <CardContent className="p-0">
           {data.products.length === 0 ? (
-            <div className="p-4"><EmptyState title="No submitted indents" description="Nothing has been submitted for this delivery date yet." /></div>
+            <div className="p-4"><EmptyState title={t('No submitted indents')} description={t('Nothing has been submitted for this delivery date yet.')} /></div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="sticky left-0 z-10 bg-card">Product</TableHead>
+                    <TableHead className="sticky left-0 z-10 bg-card">{t('Product')}</TableHead>
                     {data.branches.map((b) => <TableHead key={b.id} className="text-right">{b.name}</TableHead>)}
-                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead className="text-right">{t('Total')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -124,7 +126,7 @@ export default function IndentsPage() {
                 </TableBody>
                 <TableFooter>
                   <TableRow>
-                    <TableCell className="sticky left-0 z-10 bg-muted">Total</TableCell>
+                    <TableCell className="sticky left-0 z-10 bg-muted">{t('Total')}</TableCell>
                     {data.branches.map((b) => <TableCell key={b.id} className="text-right tabular-nums">{data.colTotals.get(b.id)}</TableCell>)}
                     <TableCell className="text-right tabular-nums">{grand}</TableCell>
                   </TableRow>
@@ -141,11 +143,11 @@ export default function IndentsPage() {
             <>
               <SheetHeader>
                 <SheetTitle>{open.number} · {branchName(db, open.branchId)}</SheetTitle>
-                <SheetDescription>Delivery {formatDate(open.deliveryDate)} <StatusBadge status={statusKey(open)} className="ml-1" /></SheetDescription>
+                <SheetDescription>{t('Delivery')} {formatDate(open.deliveryDate)} <StatusBadge status={statusKey(open)} className="ml-1" /></SheetDescription>
               </SheetHeader>
               <div className="px-4 pb-4">
                 <Table>
-                  <TableHeader><TableRow><TableHead>Product</TableHead><TableHead className="text-right">Suggested</TableHead><TableHead className="text-right">Indent</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>{t('Product')}</TableHead><TableHead className="text-right">{t('Suggested')}</TableHead><TableHead className="text-right">{t('Indent')}</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {open.lines.filter((l) => l.qty > 0 || l.suggestedQty > 0).map((l) => (
                       <TableRow key={l.productId}>
@@ -156,7 +158,7 @@ export default function IndentsPage() {
                     ))}
                   </TableBody>
                 </Table>
-                {open.note && <p className="mt-3 text-sm text-muted-foreground">Note: {open.note}</p>}
+                {open.note && <p className="mt-3 text-sm text-muted-foreground">{t('Note:')} {open.note}</p>}
               </div>
             </>
           )}

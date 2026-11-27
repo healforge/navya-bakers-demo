@@ -1,13 +1,15 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useMemo, useState } from 'react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { presetRange, RANGE_PRESETS, todayISO, type DateRange, type RangePreset } from '@/lib/dates'
 
 export function DateRangeSelect({ value, onChange, className }: { value: RangePreset; onChange: (preset: RangePreset) => void; className?: string }) {
+  const { t } = useLanguage()
   return (
     <div className={`max-w-full overflow-x-auto ${className ?? ''}`}>
       <ToggleGroup type="single" variant="outline" size="sm" value={value} onValueChange={(v) => v && onChange(v as RangePreset)} spacing={0}>
         {RANGE_PRESETS.map((p) => (
-          <ToggleGroupItem key={p.value} value={p.value} className="px-3">{p.label}</ToggleGroupItem>
+          <ToggleGroupItem key={p.value} value={p.value} className="px-3">{t(p.label)}</ToggleGroupItem>
         ))}
       </ToggleGroup>
     </div>

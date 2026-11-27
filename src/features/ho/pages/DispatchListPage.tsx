@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -16,6 +17,7 @@ import { AllocationGrid } from '../components/AllocationGrid'
 import { hoursSince } from '../components/shared'
 
 export default function DispatchListPage() {
+  const { t } = useLanguage()
   const db = useDb((d) => d)
   const nav = useNavigate()
   const [filter, setFilter] = useState<'all' | 'in_transit' | 'received'>('all')
@@ -44,19 +46,19 @@ export default function DispatchListPage() {
       id: 'when', header: 'Dispatched', accessorFn: (d) => d.dispatchedAt,
       cell: ({ row }) => {
         const d = row.original
-        return <span className="text-muted-foreground">{formatDateTime(d.dispatchedAt)}{d.status === 'in_transit' && ` · ${hoursSince(d.dispatchedAt).toFixed(1)} h`}</span>
+        return <span className="text-muted-foreground">{formatDateTime(d.dispatchedAt)}{d.status === 'in_transit' && t(' · {hours} h', { hours: hoursSince(d.dispatchedAt).toFixed(1) })}</span>
       },
     },
-  ], [db])
+  ], [db, t])
 
   return (
     <>
-      <PageHeader title="Dispatch" description="Allocate produced stock to branches and track delivery notes." actions={<Button onClick={() => setAdhoc(true)}><Plus />Ad-hoc dispatch</Button>} />
+      <PageHeader title={t('Dispatch')} description={t('Allocate produced stock to branches and track delivery notes.')} actions={<Button onClick={() => setAdhoc(true)}><Plus />{t('Ad-hoc dispatch')}</Button>} />
 
       <Card className="mb-4">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center justify-between gap-2">
-            Ready to dispatch
+            {t('Ready to dispatch')}
             {pending.length > 1 && (
               <Select value={planId} onValueChange={setPlanPick}>
                 <SelectTrigger className="w-60"><SelectValue /></SelectTrigger>
@@ -69,19 +71,19 @@ export default function DispatchListPage() {
           {planId ? (
             <AllocationGrid key={planId} planId={planId} />
           ) : (
-            <p className="text-sm text-muted-foreground">No completed production plans waiting for dispatch. Record production on a confirmed plan first.</p>
+            <p className="text-sm text-muted-foreground">{t('No completed production plans waiting for dispatch. Record production on a confirmed plan first.')}</p>
           )}
         </CardContent>
       </Card>
 
       <DataTable
         columns={columns} data={rows} getRowId={(d) => d.id} onRowClick={(d) => nav(`/ho/dispatch/${d.id}`)}
-        searchPlaceholder="Search delivery notes…" pageSize={15} emptyTitle="No dispatch notes"
+        searchPlaceholder={t('Search delivery notes…')} pageSize={15} emptyTitle={t('No dispatch notes')}
         toolbar={
           <ToggleGroup type="single" variant="outline" size="sm" value={filter} onValueChange={(v) => v && setFilter(v as typeof filter)}>
-            <ToggleGroupItem value="all" className="px-3">All</ToggleGroupItem>
-            <ToggleGroupItem value="in_transit" className="px-3">In transit</ToggleGroupItem>
-            <ToggleGroupItem value="received" className="px-3">Received</ToggleGroupItem>
+            <ToggleGroupItem value="all" className="px-3">{t('All')}</ToggleGroupItem>
+            <ToggleGroupItem value="in_transit" className="px-3">{t('In transit')}</ToggleGroupItem>
+            <ToggleGroupItem value="received" className="px-3">{t('Received')}</ToggleGroupItem>
           </ToggleGroup>
         }
       />

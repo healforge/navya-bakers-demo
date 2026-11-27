@@ -3,12 +3,16 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/fraunces";
+@import "@fontsource-variable/noto-sans-malayalam";
 
 @custom-variant dark (&:is(.dark *));
 
-@theme inline {
+@theme {
     --font-heading: 'Fraunces Variable', Georgia, serif;
     --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme inline {
     --color-success: var(--success);
     --color-success-foreground: var(--success-foreground);
     --color-warning: var(--warning);
@@ -176,4 +180,14 @@
   .print-area[data-size='A4'] { width: 100%; font-size: 12px; }
   .print-area * { color: #000 !important; }
   .print-preview, .no-print { display: none !important; }
+}
+
+:root:lang(ml) {
+    --font-heading: 'Fraunces Variable', 'Noto Sans Malayalam Variable', Georgia, serif;
+    --font-sans: 'Inter Variable', 'Noto Sans Malayalam Variable', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, 'Noto Sans Malayalam Variable', monospace;
+}
+
+@media print {
+    :root:lang(ml) .print-area[data-size='80mm'] { font-family: var(--font-mono); }
 }

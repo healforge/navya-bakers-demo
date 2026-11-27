@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { useMemo, useState } from 'react'
 import { BranchSelect, DateRangeSelect, PageHeader, useDateRange } from '@/components/common'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -9,6 +10,7 @@ import { branchMap, getSalesDay, productMap } from '@/store/selectors'
 import { ReportTable, type Cell } from '../components/ReportTable'
 
 export default function ReportsPage() {
+  const { t } = useLanguage()
   const db = useDb((d) => d)
   const { preset, setPreset, range } = useDateRange('last7')
   const [selected, setSelected] = useState<string[]>([])
@@ -46,7 +48,7 @@ export default function ReportsPage() {
 
   return (
     <>
-      <PageHeader title="Reports" description="Operational reports with CSV export." />
+      <PageHeader title={t('Reports')} description={t('Operational reports with CSV export.')} />
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <DateRangeSelect value={preset} onChange={setPreset} />
         <BranchSelect mode="multi" value={selected} onChange={setSelected} />
@@ -54,8 +56,8 @@ export default function ReportsPage() {
       </div>
       <Tabs defaultValue="sales">
         <TabsList className="mb-3 flex-wrap">
-          <TabsTrigger value="sales">Sales</TabsTrigger><TabsTrigger value="products">Product sales</TabsTrigger><TabsTrigger value="wastage">Wastage</TabsTrigger>
-          <TabsTrigger value="variance">Dispatch variance</TabsTrigger><TabsTrigger value="close">Day close / cash</TabsTrigger>
+          <TabsTrigger value="sales">{t('Sales')}</TabsTrigger><TabsTrigger value="products">{t('Product sales')}</TabsTrigger><TabsTrigger value="wastage">{t('Wastage')}</TabsTrigger>
+          <TabsTrigger value="variance">{t('Dispatch variance')}</TabsTrigger><TabsTrigger value="close">{t('Day close / cash')}</TabsTrigger>
         </TabsList>
         <TabsContent value="sales">
           <ReportTable filename={`sales_${tag}`} headers={['Date', ...branchIds.map(bName), 'Total']} kinds={['text', ...branchIds.map(() => 'inr' as const), 'inr']} rows={sales.rows} totals={sales.totals} />

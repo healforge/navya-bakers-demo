@@ -1,3 +1,4 @@
+import { useLanguage } from '@/i18n/useLanguage'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
@@ -31,6 +32,7 @@ const STATUS: Record<string, [string, Tone]> = {
 }
 
 export function StatusBadge({ status, label, className }: { status: string; label?: string; className?: string }) {
+  const { t } = useLanguage()
   const [text, tone] = STATUS[status] ?? [status, 'neutral' as Tone]
-  return <Badge variant="outline" className={cn('border-transparent font-medium', TONE[tone], className)}>{label ?? text}</Badge>
+  return <Badge variant="outline" className={cn('border-transparent font-medium', TONE[tone], className)}>{label ?? t(text)}</Badge>
 }
